@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\City;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class CitiesController extends Controller
 {
@@ -19,63 +21,56 @@ class CitiesController extends Controller
     private function getFields()
     {
         return [
-            ['ftype'=>'image', 'name'=>__('City image ( 200x200 )'), 'id'=>'image_up'],
-            ['ftype'=>'input', 'name'=>'Name', 'id'=>'name', 'placeholder'=>'Enter city name', 'required'=>true],
-            ['ftype'=>'input', 'name'=>'City 2 - 3 letter short code', 'id'=>'alias', 'placeholder'=>'Enter city short code ex. ny', 'required'=>true],
-            ['ftype'=>'input', 'name'=>'Header title', 'id'=>'header_title', 'placeholder'=>'Header title', 'required'=>true],
-            ['ftype'=>'input', 'name'=>'Header subtitle', 'id'=>'header_subtitle', 'placeholder'=>'Header subtitle', 'required'=>true],
+            ['ftype' => 'image', 'name' => __('City image ( 200x200 )'), 'id' => 'image_up'],
+            ['ftype' => 'input', 'name' => 'Name', 'id' => 'name', 'placeholder' => 'Enter city name', 'required' => true],
+            ['ftype' => 'input', 'name' => 'City 2 - 3 letter short code', 'id' => 'alias', 'placeholder' => 'Enter city short code ex. ny', 'required' => true],
+            ['ftype' => 'input', 'name' => 'Header title', 'id' => 'header_title', 'placeholder' => 'Header title', 'required' => true],
+            ['ftype' => 'input', 'name' => 'Header subtitle', 'id' => 'header_subtitle', 'placeholder' => 'Header subtitle', 'required' => true],
 
         ];
     }
 
     /**
      * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(): View
     {
         $this->validateAccess();
 
         return view('cities.index', ['setup' => [
-            'title'=>'Cities',
-            'action_link'=>route('cities.create'),
-            'action_name'=>'Add new city',
-            'items'=>City::paginate(10),
-            'item_names'=>'cities',
+            'title' => 'Cities',
+            'action_link' => route('cities.create'),
+            'action_name' => 'Add new city',
+            'items' => City::paginate(10),
+            'item_names' => 'cities',
         ]]);
     }
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(): View
     {
         $this->validateAccess();
 
         return view('general.form', ['setup' => [
-            'title'=>'New city',
-            'action_link'=>route('cities.index'),
-            'action_name'=>__('Back'),
-            'iscontent'=>true,
-            'action'=>route('cities.store'),
-            'breadcrumbs'=>[
+            'title' => 'New city',
+            'action_link' => route('cities.index'),
+            'action_name' => __('Back'),
+            'iscontent' => true,
+            'action' => route('cities.store'),
+            'breadcrumbs' => [
                 [__('Cities'), route('cities.index')],
                 [__('New'), null],
             ],
         ],
-        'fields'=>$this->getFields(), ]);
+            'fields' => $this->getFields(), ]);
     }
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $this->validateAccess();
         //Validate first
@@ -85,11 +80,11 @@ class CitiesController extends Controller
         ]);
 
         $city = City::create([
-            'name'=>$request->name,
-            'alias'=>$request->alias,
-            'image'=>'',
-            'header_title'=>$request->header_title,
-            'header_subtitle'=>$request->header_subtitle,
+            'name' => $request->name,
+            'alias' => $request->alias,
+            'image' => '',
+            'header_title' => $request->header_title,
+            'header_subtitle' => $request->header_subtitle,
 
         ]);
         $city->save();
@@ -99,9 +94,9 @@ class CitiesController extends Controller
                 $this->imagePath,
                 $request->image_up,
                 [
-                    ['name'=>'large', 'w'=>590, 'h'=>590],
-                    ['name'=>'medium', 'w'=>300, 'h'=>300],
-                    ['name'=>'thumbnail', 'w'=>200, 'h'=>200],
+                    ['name' => 'large', 'w' => 590, 'h' => 590],
+                    ['name' => 'medium', 'w' => 300, 'h' => 300],
+                    ['name' => 'thumbnail', 'w' => 200, 'h' => 200],
                 ]
             );
             $city->update();
@@ -113,10 +108,9 @@ class CitiesController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(int $id)
     {
         //
     }
@@ -125,9 +119,8 @@ class CitiesController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function edit(City $city)
+    public function edit(City $city): View
     {
         $this->validateAccess();
         $fields = $this->getFields();
@@ -139,28 +132,26 @@ class CitiesController extends Controller
 
         //dd($option);
         return view('general.form', ['setup' => [
-            'title'=>__('Edit city').' '.$city->name,
-            'action_link'=>route('cities.index'),
-            'action_name'=>__('Back'),
-            'iscontent'=>true,
-            'isupdate'=>true,
-            'action'=>route('cities.update', ['city'=>$city->id]),
-            'breadcrumbs'=>[
+            'title' => __('Edit city').' '.$city->name,
+            'action_link' => route('cities.index'),
+            'action_name' => __('Back'),
+            'iscontent' => true,
+            'isupdate' => true,
+            'action' => route('cities.update', ['city' => $city->id]),
+            'breadcrumbs' => [
                 [__('Cities'), route('cities.index')],
                 [$city->name, null],
             ],
         ],
-        'fields'=>$fields, ]);
+            'fields' => $fields, ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, City $city)
+    public function update(Request $request, City $city): RedirectResponse
     {
         $this->validateAccess();
         $city->name = $request->name;
@@ -173,9 +164,9 @@ class CitiesController extends Controller
                 $this->imagePath,
                 $request->image_up,
                 [
-                    ['name'=>'large', 'w'=>590, 'h'=>590],
-                    ['name'=>'medium', 'w'=>300, 'h'=>300],
-                    ['name'=>'thumbnail', 'w'=>200, 'h'=>200],
+                    ['name' => 'large', 'w' => 590, 'h' => 590],
+                    ['name' => 'medium', 'w' => 300, 'h' => 300],
+                    ['name' => 'thumbnail', 'w' => 200, 'h' => 200],
                 ]
             );
         }
@@ -189,15 +180,12 @@ class CitiesController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function destroy(City $city)
+    public function destroy(City $city): RedirectResponse
     {
         $this->validateAccess();
         $city->delete();
 
         return redirect()->route('cities.index')->withStatus(__('Item was deleted.'));
     }
-
-    
 }

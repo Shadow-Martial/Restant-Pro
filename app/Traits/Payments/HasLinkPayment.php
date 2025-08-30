@@ -1,59 +1,61 @@
 <?php
 
 namespace App\Traits\Payments;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Validator;
+
 use Akaunting\Module\Facade as Module;
+use Illuminate\Support\Facades\Validator;
 
 trait HasLinkPayment
 {
-    public function paymentRules(){
+    public function paymentRules()
+    {
         return [];
     }
 
-
-    public function payOrder(){
+    public function payOrder()
+    {
 
         //Since v3, we have option to show all  the payment networks
-        if($this->request->payment_method=="all"){
+        if ($this->request->payment_method == 'all') {
 
             //Payment methods
-            $paymentMethodsCount=0;
+            $paymentMethodsCount = 0;
             foreach (Module::all() as $key => $module) {
-                if($module->get('isPaymentModule')){
-                    if($this->vendor->getConfig($module->get('alias')."_enable","false")=="true"){
-                        $vendorHasOwnPayment=$module->get('alias');
+                if ($module->get('isPaymentModule')) {
+                    if ($this->vendor->getConfig($module->get('alias').'_enable', 'false') == 'true') {
+                        $vendorHasOwnPayment = $module->get('alias');
                         $paymentMethodsCount++;
                     }
                 }
             }
 
-            if($paymentMethodsCount==1){
+            if ($paymentMethodsCount == 1) {
                 //Set to the only avaiable  method and move on
-                $this->request->payment_method=$vendorHasOwnPayment;
-            }else{
+                $this->request->payment_method = $vendorHasOwnPayment;
+            } else {
 
                 //In this case, we have more than 1 available payment option, user will be redirected
                 //to screen where she can choose the way he wants to pay
-                $this->order->payment_link=route('selectpay',['order'=>$this->order->id]);
+                $this->order->payment_link = route('selectpay', ['order' => $this->order->id]);
                 $this->order->update();
-                $this->paymentRedirect= $this->order->payment_link;
+                $this->paymentRedirect = $this->order->payment_link;
+
                 return Validator::make([], []);
             }
 
-           
         }
 
         $className = '\Modules\\'.ucfirst($this->request->payment_method).'\Http\Controllers\App';
         $ref = new \ReflectionClass($className);
-        $theValidator = $ref->newInstanceArgs(array($this->order,$this->vendor))->execute();
+        $theValidator = $ref->newInstanceArgs([$this->order, $this->vendor])->execute();
 
-        if($theValidator->fails()){
+        if ($theValidator->fails()) {
             $this->invalidateOrder();
-        }else{
+        } else {
             //It is ok, use the link
-            $this->paymentRedirect= $this->order->payment_link;
+            $this->paymentRedirect = $this->order->payment_link;
         }
+
         return $theValidator;
     }
 }

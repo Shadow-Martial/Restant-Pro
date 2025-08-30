@@ -18,6 +18,7 @@ return [
         'domain' => env('MAILGUN_DOMAIN'),
         'secret' => env('MAILGUN_SECRET'),
         'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
+        'scheme' => 'https',
     ],
 
     'postmark' => [
@@ -45,5 +46,6 @@ return [
     'onesignal' => [
         'app_id' => env('ONESIGNAL_APP_ID', ''),
         'rest_api_key' => env('ONESIGNAL_REST_API_KEY', ''),
-    ]
+    ],
+
 ];

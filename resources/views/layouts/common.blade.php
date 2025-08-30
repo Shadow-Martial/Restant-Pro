@@ -10,7 +10,7 @@
 <script src="{{ asset('vendor') }}/intltelinput/build/js/intlTelInput.js"></script>
 <script src="{{ asset('vendor') }}/intltelinput/build/js/utils.js"></script>
 <script>
-
+    var defCountry="<?php echo config('settings.default_country','US'); ?>";
     function initPhone(name){
         var input = document.querySelector("input[name='"+name+"']");
         if(input!=null){
@@ -21,7 +21,7 @@
                 autoHideDialCode:true,
                 separateDialCode:true,
                 autoPlaceholder:"aggressive",
-                initialCountry: "auto",
+                initialCountry: defCountry,
                 utilsScript: "/vendor/intltelinput/build/js/utils.js",
             });
 

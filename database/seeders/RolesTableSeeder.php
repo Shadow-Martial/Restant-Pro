@@ -11,13 +11,11 @@ class RolesTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
 
-         //Roles
+        //Roles
         $admin = Role::create(['name' => 'admin']);
         $owner = Role::create(['name' => 'owner']);
         $driver = Role::create(['name' => 'driver']);
@@ -43,8 +41,8 @@ class RolesTableSeeder extends Seeder
         //ADD ADMIN USER ROLE
         DB::table('model_has_roles')->insert([
             'role_id' => 1,
-            'model_type' =>  \App\User::class,
-            'model_id'=> 1,
+            'model_type' => \App\User::class,
+            'model_id' => 1,
         ]);
     }
 }

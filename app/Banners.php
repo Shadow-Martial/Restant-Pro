@@ -2,8 +2,7 @@
 
 namespace App;
 
-use App\MyModel;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Banners extends MyModel
 {
@@ -14,6 +13,7 @@ class Banners extends MyModel
     ];
 
     protected $appends = ['imgm'];
+
     protected $imagePath = '/uploads/banners/';
 
     public function getImgmAttribute()
@@ -21,12 +21,12 @@ class Banners extends MyModel
         return $this->getImge($this->img, config('global.restorant_details_image'), '_banner.jpg');
     }
 
-    public function restaurant()
+    public function restaurant(): HasOne
     {
         return $this->hasOne(\App\Restorant::class, 'id', 'vendor_id');
     }
 
-    public function page()
+    public function page(): HasOne
     {
         return $this->hasOne(\App\Pages::class, 'id', 'page_id');
     }

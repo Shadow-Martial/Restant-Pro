@@ -16,7 +16,7 @@ Route::prefix('expenses')->group(function() {
 });
 
 Route::group([
-    'middleware' => 'web',
+    'middleware' => ['web','impersonate'],
     'namespace' => 'Modules\Expenses\Http\Controllers'
 ], function () {
     Route::prefix('expenses')->group(function() {

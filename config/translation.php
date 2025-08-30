@@ -1,4 +1,5 @@
 <?php
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -45,7 +46,7 @@ return [
     | looking for missing translations.
     |
     */
-    'scan_paths' => [app_path(), resource_path(),app_path()."/../modules"],
+    'scan_paths' => [app_path(), resource_path(), app_path().'/../modules'],
 
     /*
     |--------------------------------------------------------------------------

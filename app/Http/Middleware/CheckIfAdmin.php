@@ -3,19 +3,16 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Permission\Models\Role;
+use Symfony\Component\HttpFoundation\Response;
 
 class CheckIfAdmin
 {
     /**
      * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
      */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         // let's check, if the current user is logged in
         if (Auth::check()) {
@@ -30,6 +27,7 @@ class CheckIfAdmin
             // ... otherwise redirect him to another location of your choice...
             return redirect('/login');
         }
+
         // ... for example to the login-page
         return redirect('/login');
     }

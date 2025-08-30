@@ -4,13 +4,20 @@
     "keywords": [],
     "active": 1,
     "order": 0,
-    "version":"1.0",
+    "version":"1.4",
     "providers": [
         "Modules\\Staff\\Providers\\Main"
     ],
     "aliases": {},
     "files": [],
     "requires": [],
+    "vendor_fields":[{
+        "separator":"Staff",
+        "title": "Enable Staff",
+        "key": "staff_enable",
+        "ftype": "bool",
+        "value":true
+    }],
     "ownermenus":[
         {
             "name":"Staff",

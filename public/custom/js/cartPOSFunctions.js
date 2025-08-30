@@ -123,7 +123,13 @@ function getAllOrders(){
     orderContent.items=response.data.orders;
     makeFree();
     response.data.orders.forEach(element => {
-      makeOcccupied(element.id)
+     // console.log(element);
+      if(element.isPOSOrder){
+        makeOcccupied(element.id) 
+      }else{
+        makeWebOcccupied(element.id,element.order_id)
+      }
+     
     });
     ordersTotal.totalOrders=response.data.count;
     //updateSubTotalPrice(response.data.total,true);
@@ -558,9 +564,29 @@ window.onload = function () {
     },
     methods:
     {
-      openDetails:function(id,receipt_number){
+      openDetailsItem:function(item){
+        console.log(item);
+        if(item.isPOSOrder){
+          window.openTable(item.id,"#"+item.receipt_number);
+        }else{
+          window.open("/orders/"+item.order_id,"_blank")
+        }
         
-        window.openTable(id,"#"+receipt_number);
+      },
+      openDetails:function(id,receipt_number,isPOSOrder,order_id){
+        //Console log all parameters
+        console.log("Open details");
+        console.log(id);
+        console.log(receipt_number);
+        console.log(isPOSOrder);
+        console.log(order_id);
+
+        if(isPOSOrder){
+          window.openTable(id,"#"+receipt_number);
+        }else{
+          window.open("/orders/"+order_id,"_blank")
+        }
+        
       }
     }
   })

@@ -112,7 +112,8 @@
                                                             </button>
                                                         @endif
                                                     </form>
-                                                    <a class="dropdown-item warning red" onclick="return confirm('Are you sure you want to delete this Restaurant from Database? This will aslo delete all data related to it. This is irreversible step.')"  href="{{ route('admin.restaurant.remove',$restorant)}}">{{ __('Delete') }}</a>
+                                                    
+                                                    <a class="dropdown-item warning red" onclick="return confirm(' {{ __("Are you sure you want to delete this Restaurant from Database? This will aslo delete all data related to it. This is irreversible step.") }}')"  href="{{ route('admin.restaurant.remove',$restorant)}}">{{ __('Delete') }}</a>
                                                 </div>
                                             </div>
                                         </td>

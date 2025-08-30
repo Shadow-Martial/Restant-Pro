@@ -22,12 +22,12 @@ return [
      * ---------------------------------------------------------------
      *
      * the configuration for persisting cart
-     * 
+     *
      * This is a bit tricky. Always use session if user is something else than staff member and pos is installed.
      * This is later managed from CartController
      */
     //'storage' => env('IS_POS_CLOUD_MODE',false)?\App\Repositories\CartDBStorageRepository::class:null,
-    'storage'=>null,
+    'storage' => null,
 
     /*
      * ---------------------------------------------------------------

@@ -2,51 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use App\Traits\Fields;
+use Akaunting\Module\Facade as Module;
 use App\Items;
+use App\Models\CartStorageModel;
 use App\Models\Variants;
 use App\Order;
-use App\Restorant;
-use App\Tables;
 use App\Plans;
-use Carbon\Carbon;
-use Cart;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cookie;
+use App\Restorant;
 use App\Services\ConfChanger;
-use Akaunting\Module\Facade as Module;
-use App\Models\CartStorageModel;
+use App\Tables;
+use App\Traits\Fields;
+use Cart;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 
 class CartController extends Controller
 {
     use Fields;
 
-    private function setSessionID($session_id){
+    private function setSessionID($session_id)
+    {
         //We have session ID only from POS. So then use the CartDBStorageRepository
-        config(['shopping_cart.storage' => \App\Repositories\CartDBStorageRepository::class]); 
+        config(['shopping_cart.storage' => \App\Repositories\CartDBStorageRepository::class]);
         Cart::session($session_id);
     }
 
-    public function add(Request $request)
+    public function add(Request $request): JsonResponse
     {
-        if(isset($request->session_id)){
+        if (isset($request->session_id)) {
             $this->setSessionID($request->session_id);
 
             //Mark the POS order as not KDS finished
-            if($row = CartStorageModel::find($request->session_id."_cart_items"))
-            {
-                $row->updateAttribute('kds_finished',0);
+            if ($row = CartStorageModel::find($request->session_id.'_cart_items')) {
+                $row->updateAttribute('kds_finished', 0);
                 $row->save();
             }
         }
-    
+
         $item = Items::find($request->id);
         $restID = $item->category->restorant->id;
 
         $restaurant = Restorant::findOrFail($restID);
         \App\Services\ConfChanger::switchCurrency($restaurant);
-        
 
         //Check if added item is from the same restorant as previus items in cart
         $canAdd = false;
@@ -91,7 +91,7 @@ class CartController extends Controller
                 $theElement .= $value.' -- '.$item->extras()->findOrFail($value)->name.'  --> '.$cartItemPrice.' ->- ';
             }
 
-            Cart::add((new \DateTime())->getTimestamp(), $cartItemName, $cartItemPrice, $request->quantity, ['id'=>$item->id, 'variant'=>$request->variantID, 'extras'=>$request->extras, 'restorant_id'=>$restID, 'image'=>$item->icon, 'friendly_price'=>  Money($cartItemPrice, config('settings.cashier_currency'), config('settings.do_convertion'))->format()]);
+            Cart::add((new \DateTime())->getTimestamp(), $cartItemName, $cartItemPrice, $request->quantity, ['id' => $item->id, 'variant' => $request->variantID, 'extras' => $request->extras, 'restorant_id' => $restID, 'image' => $item->icon, 'friendly_price' => Money($cartItemPrice, config('settings.cashier_currency'), config('settings.do_convertion'))->format()]);
 
             return response()->json([
                 'status' => true,
@@ -105,11 +105,11 @@ class CartController extends Controller
         }
     }
 
-    public function getContent()
+    public function getContent(): JsonResponse
     {
 
         //In this case, we need to use the cookies for storagee
-        if(isset($_GET['session_id'])){
+        if (isset($_GET['session_id'])) {
             $this->setSessionID($_GET['session_id']);
         }
 
@@ -121,24 +121,23 @@ class CartController extends Controller
         ]);
     }
 
-    public function getContentPOS()
+    public function getContentPOS(): JsonResponse
     {
-        if(isset($_GET['session_id'])){
+        if (isset($_GET['session_id'])) {
             $this->setSessionID($_GET['session_id']);
-        }else{
+        } else {
             return response()->json([
                 'status' => false,
                 'errMsg' => 'Session is not started yet',
             ]);
         }
-        
 
-        $cs=CartStorageModel::where('id',$_GET['session_id']."_cart_items")->first();
+        $cs = CartStorageModel::where('id', $_GET['session_id'].'_cart_items')->first();
 
         return response()->json([
             'data' => Cart::getContent(),
-            'config'=> $cs?$cs->getAllConfigs():[],
-            'id'=>$_GET['session_id'],
+            'config' => $cs ? $cs->getAllConfigs() : [],
+            'id' => $_GET['session_id'],
             'total' => Cart::getSubTotal(),
             'status' => true,
             'errMsg' => '',
@@ -147,24 +146,22 @@ class CartController extends Controller
 
     public function cart()
     {
-        
-        if(isset($_GET['session_id'])){
+
+        if (isset($_GET['session_id'])) {
             $this->setSessionID($_GET['session_id']);
         }
 
-
-        $fieldsToRender=[];
-        if(strlen(config('global.order_fields'))>10){
-            $fieldsToRender=$this->convertJSONToFields(json_decode(config('global.order_fields'),true)); 
+        $fieldsToRender = [];
+        if (strlen(config('global.order_fields')) > 10) {
+            $fieldsToRender = $this->convertJSONToFields(json_decode(config('global.order_fields'), true));
         }
 
-        
         $isEmpty = false;
         if (Cart::getContent()->isEmpty()) {
             $isEmpty = true;
         }
 
-        if(!$isEmpty){
+        if (! $isEmpty) {
             //Cart is not empty
             $restorantID = null;
             foreach (Cart::getContent() as $key => $cartItem) {
@@ -172,46 +169,41 @@ class CartController extends Controller
                 break;
             }
 
-            
-
             //The restaurant
             $restaurant = Restorant::findOrFail($restorantID);
 
-            if(\Akaunting\Module\Facade::has('cards')&&$restaurant->getConfig('enable_loyalty', false)){
+            if (\Akaunting\Module\Facade::has('cards') && $restaurant->getConfig('enable_loyalty', false)) {
                 //Find the card
-                $card=null;
-                if(Auth::user()){
-                    $card=\Modules\Cards\Models\Card::where('client_id',auth()->user()->id)->where('vendor_id',$restaurant->id)->first();
+                $card = null;
+                if (Auth::user()) {
+                    $card = \Modules\Cards\Models\Card::where('client_id', auth()->user()->id)->where('vendor_id', $restaurant->id)->first();
                 }
-                
-                array_push($fieldsToRender,[
-                    "name"=>__("loyalty.card"),
-                    "id"=>"custom[loyalty_card]",
-                    "ftype"=>"input",
-                    "required"=>false,
-                    "placeholder"=>__("loyalty.card_number"),
-                    "validation"=>"",
-                    "value"=> $card? $card->card_id : "",
-                    "help"=>"",
-                    "order"=>1
+
+                array_push($fieldsToRender, [
+                    'name' => __('loyalty.card'),
+                    'id' => 'custom[loyalty_card]',
+                    'ftype' => 'input',
+                    'required' => false,
+                    'placeholder' => __('loyalty.card_number'),
+                    'validation' => '',
+                    'value' => $card ? $card->card_id : '',
+                    'help' => '',
+                    'order' => 1,
                 ]);
             }
 
             //Set cover image to be the cover image of the restaurant
-            config(['global.restorant_details_cover_image'=>$restaurant->coverm]);
+            config(['global.restorant_details_cover_image' => $restaurant->coverm]);
 
             //Set config based on restaurant
-            config(['app.timezone' => $restaurant->getConfig('time_zone',config('app.timezone'))]);
+            config(['app.timezone' => $restaurant->getConfig('time_zone', config('app.timezone'))]);
 
-            
-
-            $enablePayments=true;
-            if(config('app.isqrsaas')){
-                
+            $enablePayments = true;
+            if (config('app.isqrsaas')) {
 
                 //In case, we use vendor defined Stripe, we need to check if keys are present
-                if(config('settings.stripe_useVendor')){
-                    if($restaurant->getConfig('stripe_enable')=="true"){
+                if (config('settings.stripe_useVendor')) {
+                    if ($restaurant->getConfig('stripe_enable') == 'true') {
                         //We have stripe
                         config(['settings.enable_stripe' => true]);
                         config(['settings.stripe_key' => $restaurant->getConfig('stripe_key')]);
@@ -219,7 +211,7 @@ class CartController extends Controller
                         config(['cashier.key' => $restaurant->getConfig('stripe_key')]);
                         config(['cashier.secret' => $restaurant->getConfig('stripe_secret')]);
 
-                    }else{
+                    } else {
                         //Stripe for this vendor is disabled
                         config(['settings.enable_stripe' => false]);
                     }
@@ -232,7 +224,6 @@ class CartController extends Controller
             //Create all the time slots
             $timeSlots = $this->getTimieSlots($restaurant);
 
-           
             //user addresses
             $addresses = [];
             if (config('app.isft')) {
@@ -245,64 +236,65 @@ class CartController extends Controller
                 $tablesData[$table->id] = $table->full_name;
             }
 
-
-            $extraPayments=[];
+            $extraPayments = [];
             foreach (Module::all() as $key => $module) {
-                if($module->get('isPaymentModule')){
-                    array_push($extraPayments,$module->get('alias'));
+                if ($module->get('isPaymentModule')) {
+                    array_push($extraPayments, $module->get('alias'));
                 }
             }
-  
-            $businessHours=$restaurant->getBusinessHours();
+
+            $businessHours = $restaurant->getBusinessHours();
             $now = new \DateTime('now');
 
             $formatter = new \IntlDateFormatter(config('app.locale'), \IntlDateFormatter::SHORT, \IntlDateFormatter::SHORT);
             $formatter->setPattern(config('settings.datetime_workinghours_display_format_new'));
-        
+
             //Table ID
-            $tid = Cookie::get('tid') ? Cookie::get('tid') :null;
-            if($tid==""){$tid=null;}
-            $tables=['ftype'=>'select', 'name'=>'', 'id'=>'table_id', 'placeholder'=>'Select table', 'data'=>$tablesData, 'required'=>true];
-            $tableName="";
-            if($tid!=null){
-                $tables['value']=$tid;
-                $tableName=Tables::findOrFail($tid)->full_name;
+            $tid = Cookie::get('tid') ? Cookie::get('tid') : null;
+            if ($tid == '') {
+                $tid = null;
+            }
+            $tables = ['ftype' => 'select', 'name' => '', 'id' => 'table_id', 'placeholder' => 'Select table', 'data' => $tablesData, 'required' => true];
+            $tableName = '';
+            if ($tid != null) {
+                $tables['value'] = $tid;
+                $tableName = Tables::findOrFail($tid)->full_name;
             }
 
-            $doWeHaveOrderAfterHours=Module::has('orderdatetime')&&$restaurant->getConfig('order_date_time_enable',false);
+            $doWeHaveOrderAfterHours = Module::has('orderdatetime') && ($restaurant->getConfig('order_date_time_enable', false) == 'true');
 
-            if($doWeHaveOrderAfterHours&&count($timeSlots)==0){
-                $timeSlots=[null];
+            if ($doWeHaveOrderAfterHours && count($timeSlots) == 0) {
+                $timeSlots = [null];
             }
             $params = [
-                'enablePayments'=>$enablePayments,
+                'enablePayments' => $enablePayments,
                 'title' => 'Shopping Cart Checkout',
-                'tables' =>  $tables,
+                'tables' => $tables,
                 'restorant' => $restaurant,
                 'timeSlots' => $timeSlots,
-                'doWeHaveOrderAfterHours'=>$doWeHaveOrderAfterHours,
-                'openingTime' => $businessHours->isClosed()?$formatter->format($businessHours->nextOpen($now)):null,
-                'closingTime' => $businessHours->isOpen()?$formatter->format($businessHours->nextClose($now)):null,
+                'doWeHaveOrderAfterHours' => $doWeHaveOrderAfterHours,
+                'openingTime' => $businessHours->isClosed() ? $formatter->format($businessHours->nextOpen($now)) : null,
+                'closingTime' => $businessHours->isOpen() ? $formatter->format($businessHours->nextClose($now)) : null,
                 'addresses' => $addresses,
-                'fieldsToRender'=>$fieldsToRender,
-                'extraPayments'=>$extraPayments,
-                'tid'=>$tid,
-                'tableName'=>$tableName
+                'fieldsToRender' => $fieldsToRender,
+                'extraPayments' => $extraPayments,
+                'tid' => $tid,
+                'tableName' => $tableName,
             ];
 
             return view('cart')->with($params);
-        }else{
+        } else {
             //Cart is empty
-            if(config('app.isft')) {
+            if (config('app.isft')) {
                 return redirect()->route('front')->withError('Your cart is empty!');
-            }else{
+            } else {
                 $previousOrders = Cookie::get('orders') ? Cookie::get('orders') : '';
                 $previousOrderArray = array_filter(explode(',', $previousOrders));
 
-                if(count($previousOrderArray) > 0){
-                    foreach($previousOrderArray as $orderId){
-                        $restorant = Order::where(['id'=>$orderId])->get()->first()->restorant;
-                       
+                if (count($previousOrderArray) > 0) {
+                    foreach ($previousOrderArray as $orderId) {
+                        $restorant = Order::where(['id' => $orderId])->get()->first()->restorant;
+
                         $restorantInfo = $this->getRestaurantInfo($restorant, $previousOrderArray);
 
                         return view('restorants.show', [
@@ -310,16 +302,16 @@ class CartController extends Controller
                             'openingTime' => $restorantInfo['openingTime'],
                             'closingTime' => $restorantInfo['closingTime'],
                             'usernames' => $restorantInfo['usernames'],
-                            'canDoOrdering'=>$restorantInfo['canDoOrdering'],
-                            'currentLanguage'=>$restorantInfo['currentLanguage'],
-                            'showLanguagesSelector'=>$restorantInfo['showLanguagesSelector'],
-                            'hasGuestOrders'=>$restorantInfo['hasGuestOrders'],
-                            'fields'=>$restorantInfo['fields'],
+                            'canDoOrdering' => $restorantInfo['canDoOrdering'],
+                            'currentLanguage' => $restorantInfo['currentLanguage'],
+                            'showLanguagesSelector' => $restorantInfo['showLanguagesSelector'],
+                            'hasGuestOrders' => $restorantInfo['hasGuestOrders'],
+                            'fields' => $restorantInfo['fields'],
                         ])->withError(__('Your cart is empty!'));
                     }
-                }else{
+                } else {
                     return redirect()->route('front')->withError('Your cart is empty!');
-                }                
+                }
             }
         }
     }
@@ -368,28 +360,28 @@ class CartController extends Controller
 
         $currentEnvLanguage = isset(config('config.env')[2]['fields'][0]['data'][config('app.locale')]) ? config('config.env')[2]['fields'][0]['data'][config('app.locale')] : 'UNKNOWN';
 
-        $businessHours=$restorant->getBusinessHours();
+        $businessHours = $restorant->getBusinessHours();
         $now = new \DateTime('now');
 
         $formatter = new \IntlDateFormatter(config('app.locale'), \IntlDateFormatter::SHORT, \IntlDateFormatter::SHORT);
         $formatter->setPattern(config('settings.datetime_workinghours_display_format_new'));
 
-        return  [
+        return [
             'restorant' => $restorant,
-            'openingTime' => $businessHours->isClosed()?$formatter->format($businessHours->nextOpen($now)):null,
-            'closingTime' => $businessHours->isOpen()?$formatter->format($businessHours->nextClose($now)):null,
+            'openingTime' => $businessHours->isClosed() ? $formatter->format($businessHours->nextOpen($now)) : null,
+            'closingTime' => $businessHours->isOpen() ? $formatter->format($businessHours->nextClose($now)) : null,
             'usernames' => $usernames,
-            'canDoOrdering'=>$canDoOrdering,
-            'currentLanguage'=>$currentEnvLanguage,
-            'showLanguagesSelector'=>env('ENABLE_MILTILANGUAGE_MENUS', false) && $restorant->localmenus()->count() > 1,
-            'hasGuestOrders'=>count($previousOrderArray) > 0,
-            'fields'=>[['class'=>'col-12', 'classselect'=>'noselecttwo', 'ftype'=>'select', 'name'=>'Table', 'id'=>'table_id', 'placeholder'=>'Select table', 'data'=>$tablesData, 'required'=>true]],
+            'canDoOrdering' => $canDoOrdering,
+            'currentLanguage' => $currentEnvLanguage,
+            'showLanguagesSelector' => env('ENABLE_MILTILANGUAGE_MENUS', false) && $restorant->localmenus()->count() > 1,
+            'hasGuestOrders' => count($previousOrderArray) > 0,
+            'fields' => [['class' => 'col-12', 'classselect' => 'noselecttwo', 'ftype' => 'select', 'name' => 'Table', 'id' => 'table_id', 'placeholder' => 'Select table', 'data' => $tablesData, 'required' => true]],
         ];
     }
 
-    public function clear(Request $request)
+    public function clear(Request $request): RedirectResponse
     {
-        if(isset($request->session_id)){
+        if (isset($request->session_id)) {
             $this->setSessionID($request->session_id);
         }
 
@@ -417,15 +409,11 @@ class CartController extends Controller
 
     /**
      * Create a new controller instance.
-
-     *
-
-     * @return void
      */
-    public function remove(Request $request)
+    public function remove(Request $request): JsonResponse
     {
 
-        if(isset($request->session_id)){
+        if (isset($request->session_id)) {
             $this->setSessionID($request->session_id);
         }
 
@@ -453,9 +441,11 @@ class CartController extends Controller
      */
     private function updateCartQty($howMuch, $item_id)
     {
-        if(isset($_GET['session_id'])){
+        if (isset($_GET['session_id'])) {
             $this->setSessionID($_GET['session_id']);
         }
+
+        //Check if we manage QTY
 
         Cart::update($item_id, ['quantity' => $howMuch]);
 
@@ -467,7 +457,7 @@ class CartController extends Controller
      */
     public function increase($id)
     {
-        if(isset($_GET['session_id'])){
+        if (isset($_GET['session_id'])) {
             $this->setSessionID($_GET['session_id']);
         }
 
@@ -479,10 +469,10 @@ class CartController extends Controller
      */
     public function decrease($id)
     {
-        if(isset($_GET['session_id'])){
+        if (isset($_GET['session_id'])) {
             $this->setSessionID($_GET['session_id']);
         }
-        
+
         return $this->updateCartQty(-1, $id);
     }
 }

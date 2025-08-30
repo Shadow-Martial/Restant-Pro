@@ -4,14 +4,12 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateExpenses extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('expenses_category', function (Blueprint $table) {
             $table->id();
@@ -38,8 +36,8 @@ class CreateExpenses extends Migration
             $table->date('date');
             $table->string('reference');
             $table->text('description');
-            
-            $table->float('amount',8,2);
+
+            $table->float('amount', 8, 2);
             $table->unsignedBigInteger('restaurant_id')->nullable();
             $table->foreign('restaurant_id')->references('id')->on('restorants');
 
@@ -49,7 +47,6 @@ class CreateExpenses extends Migration
             $table->unsignedBigInteger('expenses_vendor_id')->nullable();
             $table->foreign('expenses_vendor_id')->references('id')->on('expenses_vendor');
 
-
             $table->timestamps();
             $table->softDeletes();
         });
@@ -57,13 +54,11 @@ class CreateExpenses extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('expenses');
         Schema::dropIfExists('expenses_vendor');
         Schema::dropIfExists('expenses_category');
     }
-}
+};

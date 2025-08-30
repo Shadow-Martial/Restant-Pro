@@ -2,9 +2,7 @@
       <div class="container">
         <div class="row row-grid align-items-center mb-5">
           <div class="col-lg-6">
-            @if (config('settings.enable_default_cookie_consent'))
-              @include('cookieConsent::index')
-            @endif
+           
             <h3 class="text-primary font-weight-light mb-2 ckedit" key="footer_title" id="footer_title">{{ __('poslanding.footer_title') }}</h4></h3>
             <h4 class="mb-0 font-weight-light ckedit" key="footer_subtitle" id="footer_subtitle">{{ __('poslanding.footer_subtitle') }}</h4>
           </div>

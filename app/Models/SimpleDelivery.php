@@ -15,6 +15,6 @@ class SimpleDelivery extends Model
 
     public function getPriceFormated()
     {
-       return ucfirst($this->name) . ' ' . money($this->cost,config('settings.cashier_currency'), config('settings.do_convertion'))->format();
+        return ucfirst($this->name).' '.money($this->cost, config('settings.cashier_currency'), config('settings.do_convertion'))->format();
     }
 }

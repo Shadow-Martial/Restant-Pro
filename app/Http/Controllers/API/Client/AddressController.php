@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers\API\Client;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
 use App\Address;
+use App\Http\Controllers\Controller;
 use App\Restorant;
 use App\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AddressController extends Controller
 {
-
-    public function getMyAddressesWithFees($restaurant_id)
+    public function getMyAddressesWithFees($restaurant_id): JsonResponse
     {
         $restaurant = Restorant::findOrFail($restaurant_id);
         $client = User::where(['api_token' => $_GET['api_token']])->with(['addresses'])->first();
@@ -36,14 +35,13 @@ class AddressController extends Controller
             return response()->json([
                 'data' => [],
                 'status' => false,
-                'message'=>'',
-                'errMsg' => __("You do not have any address, please add new one."),
+                'message' => '',
+                'errMsg' => __('You do not have any address, please add new one.'),
             ]);
         }
     }
 
-
-    public function getMyAddresses()
+    public function getMyAddresses(): JsonResponse
     {
         $client = User::where(['api_token' => $_GET['api_token']])->with(['addresses'])->first();
 
@@ -60,13 +58,13 @@ class AddressController extends Controller
             return response()->json([
                 'data' => [],
                 'status' => false,
-                'message'=>'',
+                'message' => '',
                 'errMsg' => __("You don't have any address, please add new one."),
             ]);
         }
     }
 
-    public function makeAddress(Request $request)
+    public function makeAddress(Request $request): JsonResponse
     {
         $client = User::where(['api_token' => $request->api_token])->first();
 
@@ -83,17 +81,17 @@ class AddressController extends Controller
 
         return response()->json([
             'status' => true,
-            'id'=>$address->id,
+            'id' => $address->id,
             'message' => __('New address added successfully!'),
         ]);
     }
 
-    public function deleteAddress(Request $request)
+    public function deleteAddress(Request $request): JsonResponse
     {
         $address_to_delete = Address::where(['id' => $request->id])
-        ->where(['user_id'=>auth()->user()->id])->first();
+            ->where(['user_id' => auth()->user()->id])->first();
 
-        if ($address_to_delete!=null) {
+        if ($address_to_delete != null) {
             $address_to_delete->active = 0;
             $address_to_delete->save();
 
@@ -108,5 +106,4 @@ class AddressController extends Controller
             ]);
         }
     }
-    
 }

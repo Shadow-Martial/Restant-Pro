@@ -1,69 +1,69 @@
 <?php
 
 namespace App\Http\Controllers\API\Driver;
+
 use App\Http\Controllers\Controller;
 use App\Order;
-use Carbon\Carbon;
-use App\Status;
 use App\Paths;
+use App\Status;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 
 class OrdersController extends Controller
 {
-
-    public function earnings()
+    public function earnings(): JsonResponse
     {
         //Today paid orders
-        $today=Order::where(['driver_id'=>auth()->user()->id])->where('payment_status','paid')->where('created_at', '>=', Carbon::today());
-       
+        $today = Order::where(['driver_id' => auth()->user()->id])->where('payment_status', 'paid')->where('created_at', '>=', Carbon::today());
+
         //Week paid orders
-        $week=Order::where(['driver_id'=>auth()->user()->id])->where('payment_status','paid')->where('created_at', '>=', Carbon::now()->startOfWeek());
+        $week = Order::where(['driver_id' => auth()->user()->id])->where('payment_status', 'paid')->where('created_at', '>=', Carbon::now()->startOfWeek());
 
         //This month paid orders
-        $month=Order::where(['driver_id'=>auth()->user()->id])->where('payment_status','paid')->where('created_at', '>=', Carbon::now()->startOfMonth());
+        $month = Order::where(['driver_id' => auth()->user()->id])->where('payment_status', 'paid')->where('created_at', '>=', Carbon::now()->startOfMonth());
 
-        //Previous month paid orders 
-        $previousmonth=Order::where(['driver_id'=>auth()->user()->id])->where('payment_status','paid')->where('created_at', '>=',  Carbon::now()->subMonth(1)->startOfMonth())->where('created_at', '<',  Carbon::now()->subMonth(1)->endOfMonth());
-
+        //Previous month paid orders
+        $previousmonth = Order::where(['driver_id' => auth()->user()->id])->where('payment_status', 'paid')->where('created_at', '>=', Carbon::now()->subMonth(1)->startOfMonth())->where('created_at', '<', Carbon::now()->subMonth(1)->endOfMonth());
 
         //This user driver_percent_from_deliver
-        $driver_percent_from_deliver=intval(auth()->user()->getConfig('driver_percent_from_deliver',config('settings.driver_percent_from_deliver')))/100;
+        $driver_percent_from_deliver = intval(auth()->user()->getConfig('driver_percent_from_deliver', config('settings.driver_percent_from_deliver'))) / 100;
 
         return response()->json([
             'data' => [
-                'user'=>auth()->user()->name,
-                'today'=>[
-                    'orders'=>$today->count(),
-                    'earning'=>$today->sum('delivery_price')*$driver_percent_from_deliver,
+                'user' => auth()->user()->name,
+                'today' => [
+                    'orders' => $today->count(),
+                    'earning' => $today->sum('delivery_price') * $driver_percent_from_deliver,
                 ],
-                'week'=>[
-                    'orders'=>$week->count(),
-                    'earning'=>$week->sum('delivery_price')*$driver_percent_from_deliver,
+                'week' => [
+                    'orders' => $week->count(),
+                    'earning' => $week->sum('delivery_price') * $driver_percent_from_deliver,
                 ],
-                'month'=>[
-                    'orders'=>$month->count(),
-                    'earning'=>$month->sum('delivery_price')*$driver_percent_from_deliver,
+                'month' => [
+                    'orders' => $month->count(),
+                    'earning' => $month->sum('delivery_price') * $driver_percent_from_deliver,
                 ],
-                'previous'=>[
-                    'orders'=>$previousmonth->count(),
-                    'earning'=>$previousmonth->sum('delivery_price')*$driver_percent_from_deliver,
-                ]
+                'previous' => [
+                    'orders' => $previousmonth->count(),
+                    'earning' => $previousmonth->sum('delivery_price') * $driver_percent_from_deliver,
+                ],
             ],
             'status' => true,
             'message' => '',
         ]);
     }
 
-    public function index()
+    public function index(): JsonResponse
     {
         return response()->json([
-            'data' => Order::orderBy('created_at', 'desc')->where(['driver_id'=>auth()->user()->id])->where('created_at', '>=', Carbon::today())->with(['items', 'status', 'restorant', 'client', 'address'])->get(),
-            'driver_id'=>auth()->user()->id,
+            'data' => Order::orderBy('created_at', 'desc')->where(['driver_id' => auth()->user()->id])->where('created_at', '>=', Carbon::today())->with(['items', 'status', 'restorant', 'client', 'address'])->get(),
+            'driver_id' => auth()->user()->id,
             'status' => true,
             'message' => '',
         ]);
     }
 
-    public function odersWithLatLng($lat,$lng)
+    public function odersWithLatLng($lat, $lng): JsonResponse
     {
 
         auth()->user()->lat = $lat;
@@ -71,14 +71,15 @@ class OrdersController extends Controller
         auth()->user()->update();
 
         return response()->json([
-            'data' => Order::orderBy('created_at', 'desc')->where(['driver_id'=>auth()->user()->id])->where('created_at', '>=', Carbon::today())->with(['items', 'status', 'restorant', 'client', 'address'])->get(),
-            'driver_id'=>auth()->user()->id,
+            'data' => Order::orderBy('created_at', 'desc')->where(['driver_id' => auth()->user()->id])->where('created_at', '>=', Carbon::today())->with(['items', 'status', 'restorant', 'client', 'address'])->get(),
+            'driver_id' => auth()->user()->id,
             'status' => true,
             'message' => 'odersWithLatLng ',
         ]);
     }
 
-    public function order(Order $order){
+    public function order(Order $order): JsonResponse
+    {
         return response()->json([
             'status' => true,
             'data' => $order,
@@ -86,24 +87,22 @@ class OrdersController extends Controller
     }
 
     //updateOrderDeliveryPrice
-    public function updateOrderDeliveryPrice(Order $order, $delivery_price)
+    public function updateOrderDeliveryPrice(Order $order, $delivery_price): JsonResponse
     {
-        
+
         $order->delivery_price = $delivery_price;
-         $order->update();
-        
+        $order->update();
 
         return response()->json([
             'status' => true,
             'message' => __('Order updated.'),
-            'data'=> Order::where(['id'=>$order->id])->with(['items', 'status', 'restorant', 'client', 'address'])->get(),
+            'data' => Order::where(['id' => $order->id])->with(['items', 'status', 'restorant', 'client', 'address'])->get(),
         ]);
     }
 
-
-    public function updateOrderStatus(Order $order, Status $status)
+    public function updateOrderStatus(Order $order, Status $status): JsonResponse
     {
-        $order->status()->attach($status->id, ['user_id'=>auth()->user()->id, 'comment'=>isset($_GET['comment']) ? $_GET['comment'] : '']);
+        $order->status()->attach($status->id, ['user_id' => auth()->user()->id, 'comment' => isset($_GET['comment']) ? $_GET['comment'] : '']);
         if ($status->id == 6) {
             $order->lat = $order->restorant->lat;
             $order->lng = $order->restorant->lng;
@@ -118,13 +117,13 @@ class OrdersController extends Controller
         return response()->json([
             'status' => true,
             'message' => __('Order updated.'),
-            'data'=> Order::where(['id'=>$order->id])->with(['items', 'status', 'restorant', 'client', 'address'])->get(),
+            'data' => Order::where(['id' => $order->id])->with(['items', 'status', 'restorant', 'client', 'address'])->get(),
         ]);
     }
 
-    public function orderTracking(Order $order, $lat, $lng)
+    public function orderTracking(Order $order, $lat, $lng): JsonResponse
     {
-        
+
         $order->lat = $lat;
         $order->lng = $lng;
         $order->update();
@@ -133,24 +132,19 @@ class OrdersController extends Controller
         $order->driver->lng = $lng;
         $order->driver->update();
 
-        $lastPath=$order->driver->paths()->orderByDesc('id')->first();
-        
-        $shouldInsertPath=!($lastPath&&$lastPath->lat==$lat&&$lastPath->lng==$lng);
+        $lastPath = $order->driver->paths()->orderByDesc('id')->first();
 
+        $shouldInsertPath = ! ($lastPath && $lastPath->lat == $lat && $lastPath->lng == $lng);
 
-       if($shouldInsertPath){
-        $path = new Paths;
+        if ($shouldInsertPath) {
+            $path = new Paths;
 
-        $path->lat =$lat;
-        $path->lng =$lng;
-        $path->user_id=$order->driver->id;
+            $path->lat = $lat;
+            $path->lng = $lng;
+            $path->user_id = $order->driver->id;
 
-        $path->save();
-       }
-
-        
-
-       
+            $path->save();
+        }
 
         return response()->json([
             'status' => true,
@@ -158,8 +152,7 @@ class OrdersController extends Controller
         ]);
     }
 
-
-    public function acceptOrder(Order $order)
+    public function acceptOrder(Order $order): JsonResponse
     {
         //This driver decides to accept the order
 
@@ -167,7 +160,7 @@ class OrdersController extends Controller
         if (auth()->user()->id == $order->driver_id) {
 
             //1. Order will be accepted
-            $order->status()->attach([13 => ['comment'=>__('Driver accepts order'), 'user_id' => auth()->user()->id]]);
+            $order->status()->attach([13 => ['comment' => __('Driver accepts order'), 'user_id' => auth()->user()->id]]);
 
             return response()->json([
                 'status' => true,
@@ -181,7 +174,7 @@ class OrdersController extends Controller
         }
     }
 
-    public function rejectOrder(Order $order)
+    public function rejectOrder(Order $order): JsonResponse
     {
         //This driver decides to reject the order
 
@@ -190,7 +183,7 @@ class OrdersController extends Controller
 
             //1. Order will be rejected
             $order->driver_id = null;
-            $order->status()->attach([12 => ['comment'=>__('Driver reject order'), 'user_id' => auth()->user()->id]]);
+            $order->status()->attach([12 => ['comment' => __('Driver reject order'), 'user_id' => auth()->user()->id]]);
             $order->update();
 
             //2. TODO Look for new driver

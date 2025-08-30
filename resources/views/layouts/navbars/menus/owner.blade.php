@@ -34,6 +34,11 @@
             <i class="ni ni-shop text-info"></i> {{ __('Restaurant') }}
         </a>
     </li>
+    <li class="nav-item">
+       <a class="nav-link" href="{{ route('admin.owner.apps') }}">
+           <i class="ni ni-app text-red"></i> {{ __('Apps') }}
+       </a>
+   </li>
     @if(!config('app.issd')&&!config('settings.makePureSaaS',false))
         <li class="nav-item">
             <a class="nav-link" href="{{ route('items.index') }}">

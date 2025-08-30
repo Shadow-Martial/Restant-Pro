@@ -10,10 +10,8 @@ trait HasTranslations
 
     /**
      * Convert the model instance to an array.
-     *
-     * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         $attributes = parent::toArray();
         foreach ($this->getTranslatableAttributes() as $field) {

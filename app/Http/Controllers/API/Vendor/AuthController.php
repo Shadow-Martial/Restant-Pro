@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\API\Vendor;
 
+use App\Events\NewVendor;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Restorant;
 use App\User;
-use App\Restorant;      
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use App\Events\NewVendor;
 
 class AuthController extends Controller
 {
@@ -18,13 +19,14 @@ class AuthController extends Controller
      */
     public function getToken(Request $request)
     {
-        $user = User::where(['active'=>1, 'email'=>$request->email])->first();
+        $user = User::where(['active' => 1, 'email' => $request->email])->first();
         if ($user != null) {
             if (Hash::check($request->password, $user->password)) {
-                if ($user->hasRole(['owner'])) {
-                    if( $request->has('expotoken')){
+                if ($user->hasRole(['owner', 'staff'])) {
+                    if ($request->has('expotoken')) {
                         $user->setExpoToken($request->expotoken);
                     }
+
                     return response()->json([
                         'status' => true,
                         'token' => $user->api_token,
@@ -46,92 +48,89 @@ class AuthController extends Controller
         }
     }
 
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
-        
-            $validator = Validator::make($request->all(), [
-                'vendor_name' => ['required', 'string', 'max:255','unique:companies,name'],
-                'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'email', 'unique:users', 'max:255'],
-                'phone' => ['required', 'string', 'regex:/^([0-9\s\-\+\(\)]*)$/'],
-                'password' => ['required', 'string', 'min:8'],
-                'app_secret'=>['required', 'string'],
-            ]);
-            
-            
 
-            if (!$validator->fails()) {
-                
-                if(config('settings.app_secret')==null||config('settings.app_secret').""!=$request->app_secret){
-                     return response()->json([
-                        'status' => false,
-                        'errMsg' => ['app_secret'=>__("App secret is incorrectly set")],
-                    ]);
-                }
-                $vendor = new User;
+        $validator = Validator::make($request->all(), [
+            'vendor_name' => ['required', 'string', 'max:255', 'unique:companies,name'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'unique:users', 'max:255'],
+            'phone' => ['required', 'string', 'regex:/^([0-9\s\-\+\(\)]*)$/'],
+            'password' => ['required', 'string', 'min:8'],
+            'app_secret' => ['required', 'string'],
+        ]);
 
-                $vendor->name = $request->name;
-                $vendor->email = $request->email;
-                $vendor->phone = $request->phone;
-                $vendor->password = Hash::make($request->password);
-                $vendor->api_token = Str::random(80);
-                $vendor->save();
+        if (! $validator->fails()) {
 
-                //Assign role
-                $vendor->assignRole('owner');
+            if (config('settings.app_secret') == null || config('settings.app_secret').'' != $request->app_secret) {
+                return response()->json([
+                    'status' => false,
+                    'errMsg' => ['app_secret' => __('App secret is incorrectly set')],
+                ]);
+            }
+            $vendor = new User;
 
-                if( $request->has('expotoken')){
-                    $vendor->setExpoToken($request->expotoken);
-                }
+            $vendor->name = $request->name;
+            $vendor->email = $request->email;
+            $vendor->phone = $request->phone;
+            $vendor->password = Hash::make($request->password);
+            $vendor->api_token = Str::random(80);
+            $vendor->save();
 
-                //Create Restorant
-                $restaurant = new Restorant;
-                $restaurant->name = strip_tags($request->vendor_name);
-                $restaurant->user_id = $vendor->id;
-                $restaurant->description = strip_tags('');
-                $restaurant->minimum =  0;
-                $restaurant->lat = 0;
-                $restaurant->lng = 0;
-                $restaurant->active = config('app.isqrsaas')?1:0; //yes in qr and wp, no in ft
-                $restaurant->address = '';
-                $restaurant->phone = $vendor->phone;
-                $restaurant->subdomain = $this->makeAlias(strip_tags($request->vendor_name));
-                $restaurant->save();
+            //Assign role
+            $vendor->assignRole('owner');
 
-                 //Fire event
-                NewVendor::dispatch($restaurant->user,$restaurant);
+            if ($request->has('expotoken')) {
+                $vendor->setExpoToken($request->expotoken);
+            }
 
-                //Send email to the user/owner
-               if(config('app.isqrsaas')){
-                   //qr wp
+            //Create Restorant
+            $restaurant = new Restorant;
+            $restaurant->name = strip_tags($request->vendor_name);
+            $restaurant->user_id = $vendor->id;
+            $restaurant->description = strip_tags('');
+            $restaurant->minimum = 0;
+            $restaurant->lat = 0;
+            $restaurant->lng = 0;
+            $restaurant->active = config('app.isqrsaas') ? 1 : 0; //yes in qr and wp, no in ft
+            $restaurant->address = '';
+            $restaurant->phone = $vendor->phone;
+            $restaurant->subdomain = $this->makeAlias(strip_tags($request->vendor_name));
+            $restaurant->save();
+
+            //Fire event
+            NewVendor::dispatch($restaurant->user, $restaurant);
+
+            //Send email to the user/owner
+            if (config('app.isqrsaas')) {
+                //qr wp
                 return response()->json([
                     'status' => true,
                     'token' => $vendor->api_token,
                     'id' => $vendor->id,
                 ]);
-               }else{
-                   //FT
-                return response()->json([
-                    'status' => false,
-                    'errMsg'=>__("Restaurant account created. Please wait for a call from us to activate your account.")
-                ]);
-               }
-
-
-                
             } else {
+                //FT
                 return response()->json([
                     'status' => false,
-                    'errMsg' => $validator->errors(),
+                    'errMsg' => __('Restaurant account created. Please wait for a call from us to activate your account.'),
                 ]);
             }
-        
+
+        } else {
+            return response()->json([
+                'status' => false,
+                'errMsg' => $validator->errors(),
+            ]);
+        }
+
     }
 
     /**
      * Return invalid user data
      */
-    private function invalidResponse($message='User not found!'){
+    private function invalidResponse($message = 'User not found!')
+    {
         return response()->json([
             'status' => false,
             'errMsg' => __($message),
@@ -151,8 +150,8 @@ class AuthController extends Controller
                 'data' => [
                     'name' => $user->name,
                     'email' => $user->email,
-                    'phone' => $user->phone ? $user->phone : ''
-                ]
+                    'phone' => $user->phone ? $user->phone : '',
+                ],
             ]);
         } else {
             return $this->invalidResponse();
@@ -161,8 +160,8 @@ class AuthController extends Controller
 
     public function deactivate()
     {
-        $user=User::where(['api_token' => $_GET['api_token']])->first();
-        
+        $user = User::where(['api_token' => $_GET['api_token']])->first();
+
         if ($user) {
             $user->working = 0;
             $user->active = 0;
@@ -170,9 +169,9 @@ class AuthController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => __('User deactivated')
+                'message' => __('User deactivated'),
             ]);
-        }else{
+        } else {
             return $this->invalidResponse();
         }
     }

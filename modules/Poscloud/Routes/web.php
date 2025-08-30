@@ -14,7 +14,7 @@
 
 
 Route::group([
-    'middleware' => 'web',
+    'middleware' =>[ 'web','impersonate'],
     'namespace' => 'Modules\Poscloud\Http\Controllers'
 ], function () {
     Route::prefix('poscloud')->group(function() {

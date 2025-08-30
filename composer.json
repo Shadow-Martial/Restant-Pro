@@ -8,87 +8,65 @@
     ],
     "license": "MIT",
     "repositories": {
-        "laravel-dashboard-installer": {
-            "type": "path",
-            "url": "packages/mobidonia/laravel-dashboard-installer",
-            "options": {
-                "symlink": true
-            }
-        },
-        "laravel-selfupdater": {
-            "type": "path",
-            "url": "packages/codedge/laravel-selfupdater",
-            "options": {
-                "symlink": true
-            }
-        },
-        "laravel-translation": {
-            "type": "path",
-            "url": "packages/joedixon/laravel-translation",
-            "options": {
-                "symlink": true
-            }
-        }
     },
     "require": {
-        "php": "^7.3|^8.0",
-        "akaunting/module": "^2.0",
-        "akaunting/money": "^1.1",
-        "biscolab/laravel-recaptcha": "^5.0",
+        "php": "^8.1",
+        "akaunting/laravel-module": "^2.0",
+        "akaunting/laravel-money": "^4.0",
+        "biscolab/laravel-recaptcha": "^6.0",
         "cmixin/business-time": "^1.11",
-        "codedge/laravel-selfupdater": "@dev",
-        "darryldecode/cart": "~4.0",
+        "codedge/laravel-selfupdater": "^3.8",
+        "dacoto/laravel-wizard-installer": "^1.0",
+        "darryldecode/cart": "^4.2",
         "dnsimmons/openweather": "^1.0",
-        "doctrine/dbal": "^2.11",
-        "fideloper/proxy": "^4.4",
-        "fruitcake/laravel-cors": "^2.0",
-        "guzzlehttp/guzzle": "^7.0.1",
+        "doctrine/dbal": "^3.5",
+        "guzzlehttp/guzzle": "^7.2",
         "intervention/image": "^2.5",
-        "joedixon/laravel-translation": "@dev",
-        "kkomelin/laravel-translatable-string-exporter": "^1.10",
-        "laravel-frontend-presets/argon": "^1.0",
-        "laravel-notification-channels/onesignal": "^2.3",
-        "laravel-notification-channels/twilio": "^3.1",
-        "laravel/cashier": "^12.4",
-        "laravel/cashier-mollie": "1.14.1",
-        "laravel/framework": "^8.22",
-        "laravel/socialite": "^5.0",
-        "laravel/tinker": "^2.5",
-        "laravel/ui": "^3.0",
+        "joedixon/laravel-translation": "^2.2",
+        "kkomelin/laravel-translatable-string-exporter": "^1.19",
+        "laravel-frontend-presets/argon": "^2.0",
+        "laravel-notification-channels/onesignal": "^2.5",
+        "laravel-notification-channels/twilio": "^3.3",
+        "laravel/cashier": "^14.7",
+        "laravel/framework": "^10.42",
+        "laravel/socialite": "^5.6",
+        "laravel/tinker": "^2.8",
+        "laravel/ui": "^4.2",
         "maatwebsite/excel": "^3.1",
-        "mckenziearts/laravel-notify": "^2.1",
-        "mobidonia/laravel-dashboard-installer": "@dev",
-        "mollie/laravel-mollie": "^2.0",
-        "onecentlin/laravel-adminer": "^4.7",
-        "paypal/rest-api-sdk-php": "^1.14",
-        "pusher/pusher-php-server": "^4.1",
+        "mckenziearts/laravel-notify": "^2.4",
+        "mollie/laravel-mollie": "^2.22",
+        "pusher/pusher-php-server": "^7.0",
         "silviolleite/laravelpwa": "^2.0",
-        "spatie/eloquent-sortable": "^3.11",
-        "spatie/geocoder": "^3.9",
-        "spatie/laravel-cookie-consent": "^2.12",
+        "spatie/eloquent-sortable": "^4.0",
+        "spatie/geocoder": "^3.14",
+        "spatie/laravel-cookie-consent": "^3.2",
         "spatie/laravel-googletagmanager": "^2.6",
-        "spatie/laravel-permission": "^3.18",
-        "spatie/laravel-sitemap": "^5.8",
-        "spatie/laravel-translatable": "^4.6",
-        "spatie/opening-hours": "^2.10",
-        "stripe/stripe-php": "^7.60",
+        "spatie/laravel-ignition": "^2.0",
+        "spatie/laravel-permission": "^5.9",
+        "spatie/laravel-sitemap": "^6.2",
+        "spatie/laravel-sluggable": "^3.4",
+        "spatie/laravel-translatable": "^6.3",
+        "spatie/laravel-welcome-notification": "^2.3",
+        "spatie/opening-hours": "^2.13",
         "twilio/sdk": "^6.11",
-        "unicodeveloper/laravel-paystack": "^1.0",
-        "willvincent/laravel-rateable": "2.3.0"
+        "unicodeveloper/laravel-paystack": "^1.1",
+        "willvincent/laravel-rateable": "^3.1"
     },
     "require-dev": {
-        "barryvdh/laravel-debugbar": "^3.5",
-        "facade/ignition": "^2.5",
         "fakerphp/faker": "^1.9.1",
-        "laravel/sail": "^1.1",
-        "mockery/mockery": "^1.4.2",
-        "nunomaduro/collision": "^5.0",
-        "phpunit/phpunit": "^9.3.3"
+        "laravel/pint": "^1.0",
+        "laravel/sail": "*",
+        "mockery/mockery": "^1.4.4",
+        "nunomaduro/collision": "^6.1",
+        "phpunit/phpunit": "^9.5.10"
     },
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
     },
     "extra": {
         "laravel": {
@@ -108,7 +86,7 @@
             "Tests\\": "tests/"
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true,
     "scripts": {
         "post-autoload-dump": [

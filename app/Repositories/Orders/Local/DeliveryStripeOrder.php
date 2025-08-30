@@ -1,9 +1,10 @@
 <?php
 
 namespace App\Repositories\Orders\Local;
+
 use App\Repositories\Orders\LocalOrderRepository;
-use App\Traits\Payments\HasStripe;
 use App\Traits\Expedition\HasSimpleDelivery;
+use App\Traits\Payments\HasStripe;
 
 class DeliveryStripeOrder extends LocalOrderRepository
 {

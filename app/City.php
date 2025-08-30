@@ -2,16 +2,18 @@
 
 namespace App;
 
-use App\MyModel;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class City extends MyModel
 {
     use SoftDeletes;
+
     protected $table = 'cities';
+
     protected $imagePath = '/uploads/settings/';
 
     protected $fillable = ['name', 'alias', 'image', 'header_title', 'header_subtitle'];
+
     protected $appends = ['logo'];
 
     public function getLogoAttribute()

@@ -2,15 +2,16 @@
 
 namespace App;
 
+use App\Traits\HasConfig;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\HasConfig;
 
 class Plans extends Model
 {
-    use SoftDeletes;
     use HasConfig;
+    use SoftDeletes;
 
-    protected $modelName="App\Plans";
+    protected $modelName = \App\Plans::class;
+
     protected $table = 'plan';
 }

@@ -89,7 +89,7 @@
                                 {{ $items->links() }}
                             </nav>
                         @else
-                            <h4>{{__('crud.no_items',['items'=>$item_names])}}</h4>
+                            <h4>{{__('crud.no_items',['items'=>__($item_names)])}}</h4>
                         @endif
                     </div>
                    @endif

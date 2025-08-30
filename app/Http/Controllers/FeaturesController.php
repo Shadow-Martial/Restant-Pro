@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Features;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class FeaturesController extends Controller
 {
@@ -19,22 +21,19 @@ class FeaturesController extends Controller
     private function getFields()
     {
         return [
-            ['ftype'=>'image', 'name'=>__('Feature image ( 128x128 )'), 'id'=>'image'],
-            ['ftype'=>'input', 'name'=>'Title', 'id'=>'title', 'placeholder'=>__('Enter title'), 'required'=>true],
-            ['ftype'=>'input', 'name'=>'Description', 'id'=>'description', 'placeholder'=>__('Enter description'), 'required'=>true],
+            ['ftype' => 'image', 'name' => __('Feature image ( 128x128 )'), 'id' => 'image'],
+            ['ftype' => 'input', 'name' => 'Title', 'id' => 'title', 'placeholder' => __('Enter title'), 'required' => true],
+            ['ftype' => 'input', 'name' => 'Description', 'id' => 'description', 'placeholder' => __('Enter description'), 'required' => true],
         ];
     }
 
     /**
      * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(): View
     {
         $this->validateAccess();
 
-        
         return view('landing.features.index', ['setup' => [
             'iscontent' => true,
             'title' => __('Features'),
@@ -51,10 +50,8 @@ class FeaturesController extends Controller
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(): View
     {
         $this->validateAccess();
 
@@ -70,16 +67,13 @@ class FeaturesController extends Controller
                 [__('New'), null],
             ],
         ],
-        'fields'=>$this->getFields(), ]);
+            'fields' => $this->getFields(), ]);
     }
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $this->validateAccess();
         //Validate first
@@ -92,7 +86,7 @@ class FeaturesController extends Controller
             'post_type' => 'feature',
             'title' => $request->title,
             'description' => $request->description,
-            'image'=>'',
+            'image' => '',
         ]);
 
         $feature->save();
@@ -102,7 +96,7 @@ class FeaturesController extends Controller
                 $this->imagePath,
                 $request->image,
                 [
-                    ['name'=>'large', 'w'=>128, 'h'=>128],
+                    ['name' => 'large', 'w' => 128, 'h' => 128],
                 ]
             );
             $feature->update();
@@ -114,7 +108,6 @@ class FeaturesController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Features  $features
      * @return \Illuminate\Http\Response
      */
     public function show(Features $features)
@@ -126,9 +119,8 @@ class FeaturesController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\Features  $features
-     * @return \Illuminate\Http\Response
      */
-    public function edit(Features $feature)
+    public function edit(Features $feature): View
     {
         $this->validateAccess();
         $fields = $this->getFields();
@@ -149,17 +141,15 @@ class FeaturesController extends Controller
                 [$feature->id, null],
             ],
         ],
-        'fields'=>$fields, ]);
+            'fields' => $fields, ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Features  $features
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Features $feature)
+    public function update(Request $request, Features $feature): RedirectResponse
     {
         $this->validateAccess();
 
@@ -171,7 +161,7 @@ class FeaturesController extends Controller
                 $this->imagePath,
                 $request->image,
                 [
-                    ['name'=>'large', 'w'=>128, 'h'=>128],
+                    ['name' => 'large', 'w' => 128, 'h' => 128],
                 ]
             );
         }
@@ -185,9 +175,8 @@ class FeaturesController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Features  $features
-     * @return \Illuminate\Http\Response
      */
-    public function destroy(Features $feature)
+    public function destroy(Features $feature): RedirectResponse
     {
         $this->validateAccess();
 

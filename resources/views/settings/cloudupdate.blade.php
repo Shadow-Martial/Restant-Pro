@@ -24,20 +24,9 @@
                             </button>
                         </div>
                     @endif
-                    @if (isset($okMemory)&&!$okMemory)
-                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                            {{ __('There is not enough PHP memory_limit. Please refer to docs on how to increase to at least 512MB')}}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    @endif
+                    
 
-                    @if($newVersionAvailable)
-                        <a href="{{ route('settings.cloudupdate') }}?do_update=true" class="btn btn-sm btn-success">{{ __('New version available') }} - v{{$newVersion}}</a>
-                        @else
-                        <a class="btn btn-sm btn-white" href="javascript:alert('You do have the latest major version')">{{ __('Latest version')}}</a>
-                    @endif     
+                      
                 </div>
             </div>
         </div>

@@ -40,6 +40,7 @@
         {{ $order->created_at->locale(Config::get('app.locale'))->isoFormat('LLLL')  }}
     </td>
     <td class="table-web">
+        {{ $order->table ? $order->table->getFullNameAttribute()." / " : '' }}
         {{ $order->getExpeditionType() }}
     </td>
     @if (!isset($hideAction))

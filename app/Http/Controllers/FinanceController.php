@@ -5,53 +5,53 @@ namespace App\Http\Controllers;
 use App\Exports\FinancesExport;
 use App\Order;
 use App\Restorant;
+use App\Status;
 use App\User;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Maatwebsite\Excel\Facades\Excel;
 use Stripe\Account;
 use Stripe\AccountLink;
 use Stripe\Stripe;
-use App\Status;
 
 class FinanceController extends Controller
 {
     private function getResources()
     {
-        $restorants = Restorant::where(['active'=>1])->get();
-        $drivers = User::role('driver')->where(['active'=>1])->get();
-        $clients = User::role('client')->where(['active'=>1])->get();
+        $restorants = Restorant::where(['active' => 1])->get();
+        $drivers = User::role('driver')->where(['active' => 1])->get();
+        $clients = User::role('client')->where(['active' => 1])->get();
 
         $orders = Order::orderBy('created_at', 'desc');
 
         //Get client's orders
         if (auth()->user()->hasRole('client')) {
-            $orders = $orders->where(['client_id'=>auth()->user()->id]);
+            $orders = $orders->where(['client_id' => auth()->user()->id]);
         } elseif (auth()->user()->hasRole('driver')) {
-            $orders = $orders->where(['driver_id'=>auth()->user()->id]);
+            $orders = $orders->where(['driver_id' => auth()->user()->id]);
         //Get owner's restorant orders
         } elseif (auth()->user()->hasRole('owner')) {
-            $orders = $orders->where(['restorant_id'=>auth()->user()->restorant->id]);
+            $orders = $orders->where(['restorant_id' => auth()->user()->restorant->id]);
         }
 
         //FILTER BT RESTORANT
         if (isset($_GET['restorant_id'])) {
-            $orders = $orders->where(['restorant_id'=>$_GET['restorant_id']]);
+            $orders = $orders->where(['restorant_id' => $_GET['restorant_id']]);
         }
         //If restorant owner, get his restorant orders only
         if (auth()->user()->hasRole('owner')) {
             //Current restorant id
             $restorant_id = auth()->user()->restorant->id;
-            $orders = $orders->where(['restorant_id'=>$restorant_id]);
+            $orders = $orders->where(['restorant_id' => $restorant_id]);
         }
 
         //BY CLIENT
         if (isset($_GET['client_id'])) {
-            $orders = $orders->where(['client_id'=>$_GET['client_id']]);
+            $orders = $orders->where(['client_id' => $_GET['client_id']]);
         }
 
         //BY DRIVER
         if (isset($_GET['driver_id'])) {
-            $orders = $orders->where(['driver_id'=>$_GET['driver_id']]);
+            $orders = $orders->where(['driver_id' => $_GET['driver_id']]);
         }
 
         //BY DATE FROM
@@ -64,7 +64,7 @@ class FinanceController extends Controller
             $orders = $orders->whereDate('created_at', '<=', $_GET['toDate']);
         }
 
-        return ['orders' => $orders, 'restorants'=>$restorants, 'drivers'=>$drivers, 'clients'=>$clients];
+        return ['orders' => $orders, 'restorants' => $restorants, 'drivers' => $drivers, 'clients' => $clients];
     }
 
     public function adminFinances()
@@ -74,38 +74,38 @@ class FinanceController extends Controller
         }
 
         $resources = $this->getResources();
-        $resources['orders'] = $resources['orders']->where('payment_status','paid')->whereNotNull('payment_method');
+        $resources['orders'] = $resources['orders']->where('payment_status', 'paid')->whereNotNull('payment_method');
 
         //With downloaod
         if (isset($_GET['report'])) {
             $items = [];
             foreach ($resources['orders']->get() as $key => $order) {
                 $item = [
-                    'order_id'=>$order->id,
-                    'restaurant_name'=>$order->restorant->name,
-                    'restaurant_id'=>$order->restorant_id,
-                    'created'=>$order->created_at,
-                    'last_status'=>$order->status->pluck('alias')->last(),
-                    'client_name'=>$order->client?$order->client->name:"",
-                    'client_id'=>$order->client_id,
-                    'address'=>$order->address ? $order->address->address : '',
-                    'address_id'=>$order->address_id,
-                    'driver_name'=>$order->driver ? $order->driver->name : '',
-                    'driver_id'=>$order->driver_id,
-                    'payment_method'=>$order->payment_method,
-                    'srtipe_payment_id'=>$order->srtipe_payment_id,
-                    'restaurant_fee'=>$order->fee,
-                    'order_fee'=>$order->fee_value,
-                    'restaurant_static_fee'=>$order->static_fee,
-                    'platform_fee'=>$order->fee_value + $order->static_fee,
-                    'processor_fee'=>$order->payment_processor_fee,
-                    'delivery'=>$order->delivery_price,
-                    'net_price_with_vat'=>$order->order_price_with_discount,
-                    'discount'=>$order->discount,
-                    'vat'=>$order->vatvalue,
-                    'net_price'=>$order->order_price_with_discount - $order->vatvalue,
-                    'order_total'=>$order->delivery_price + $order->order_price_with_discount,
-                  ];
+                    'order_id' => $order->id,
+                    'restaurant_name' => $order->restorant->name,
+                    'restaurant_id' => $order->restorant_id,
+                    'created' => $order->created_at,
+                    'last_status' => $order->status->pluck('alias')->last(),
+                    'client_name' => $order->client ? $order->client->name : '',
+                    'client_id' => $order->client_id,
+                    'address' => $order->address ? $order->address->address : '',
+                    'address_id' => $order->address_id,
+                    'driver_name' => $order->driver ? $order->driver->name : '',
+                    'driver_id' => $order->driver_id,
+                    'payment_method' => $order->payment_method,
+                    'srtipe_payment_id' => $order->srtipe_payment_id,
+                    'restaurant_fee' => $order->fee,
+                    'order_fee' => $order->fee_value,
+                    'restaurant_static_fee' => $order->static_fee,
+                    'platform_fee' => $order->fee_value + $order->static_fee,
+                    'processor_fee' => $order->payment_processor_fee,
+                    'delivery' => $order->delivery_price,
+                    'net_price_with_vat' => $order->order_price_with_discount,
+                    'discount' => $order->discount,
+                    'vat' => $order->vatvalue,
+                    'net_price' => $order->order_price_with_discount - $order->vatvalue,
+                    'order_total' => $order->delivery_price + $order->order_price_with_discount,
+                ];
                 array_push($items, $item);
             }
 
@@ -114,15 +114,15 @@ class FinanceController extends Controller
 
         //CARDS
         $cards = [
-            ['title'=>'Orders', 'value'=>0],
-            ['title'=>'Total', 'value'=>0, 'isMoney'=>true],
-            ['title'=>'Platform Fee', 'value'=>0, 'isMoney'=>true],
-            ['title'=>'Net', 'value'=>0, 'isMoney'=>true],
+            ['title' => 'Orders', 'value' => 0],
+            ['title' => 'Total', 'value' => 0, 'isMoney' => true],
+            ['title' => 'Platform Fee', 'value' => 0, 'isMoney' => true],
+            ['title' => 'Net', 'value' => 0, 'isMoney' => true],
 
-            ['title'=>'Processor fee', 'value'=>0, 'isMoney'=>true],
-            ['title'=>'Deliveries', 'value'=>0],
-            ['title'=>'Delivery income', 'value'=>0, 'isMoney'=>true],
-            ['title'=>'Platform profit', 'value'=>0, 'isMoney'=>true],
+            ['title' => 'Processor fee', 'value' => 0, 'isMoney' => true],
+            ['title' => 'Deliveries', 'value' => 0],
+            ['title' => 'Delivery income', 'value' => 0, 'isMoney' => true],
+            ['title' => 'Platform profit', 'value' => 0, 'isMoney' => true],
         ];
         foreach ($resources['orders']->get() as $key => $order) {
             $cards[0]['value'] += 1;
@@ -137,13 +137,13 @@ class FinanceController extends Controller
         }
 
         $displayParam = [
-            'cards'=> $cards,
+            'cards' => $cards,
             'orders' => $resources['orders']->paginate(10),
-            'restorants'=>$resources['restorants'],
-            'drivers'=>$resources['drivers'],
-            'clients'=>$resources['clients'],
-            'parameters'=>count($_GET) != 0,
-            'statuses'=>Status::pluck('name','id')->toArray()
+            'restorants' => $resources['restorants'],
+            'drivers' => $resources['drivers'],
+            'clients' => $resources['clients'],
+            'parameters' => count($_GET) != 0,
+            'statuses' => Status::pluck('name', 'id')->toArray(),
         ];
 
         return view('finances.index', $displayParam);
@@ -159,7 +159,7 @@ class FinanceController extends Controller
         $restaurant = auth()->user()->restorant;
 
         //Change currency
-        \App\Services\ConfChanger::switchCurrency( $restaurant);
+        \App\Services\ConfChanger::switchCurrency($restaurant);
 
         //Check if Owner has completed
         $stripe_details_submitted = __('No');
@@ -169,43 +169,43 @@ class FinanceController extends Controller
 
             $stripe_details_submitted = Account::retrieve(
                 auth()->user()->stripe_account, []
-              )->details_submitted ? __('Yes') : __('No');
+            )->details_submitted ? __('Yes') : __('No');
         }
 
         $resources = $this->getResources();
 
-        $resources['orders'] = $resources['orders']->whereNotNull('payment_method')->where('payment_status','paid');
+        $resources['orders'] = $resources['orders']->whereNotNull('payment_method')->where('payment_status', 'paid');
 
         //With downloaod
         if (isset($_GET['report'])) {
             $items = [];
             foreach ($resources['orders']->get() as $key => $order) {
                 $item = [
-                    'order_id'=>$order->id,
-                    'restaurant_name'=>$order->restorant->name,
-                    'restaurant_id'=>$order->restorant_id,
-                    'created'=>$order->created_at,
-                    'last_status'=>$order->status->pluck('alias')->last(),
-                    'client_name'=>$order->client ? $order->client->name : '',
-                    'client_id'=>$order->client_id,
-                    'address'=>$order->address ? $order->address->address : '',
-                    'address_id'=>$order->address_id,
-                    'driver_name'=>$order->driver ? $order->driver->name : '',
-                    'driver_id'=>$order->driver_id,
-                    'payment_method'=>$order->payment_method,
-                    'srtipe_payment_id'=>$order->srtipe_payment_id,
-                    'restaurant_fee'=>$order->fee,
-                    'order_fee'=>$order->fee_value,
-                    'restaurant_static_fee'=>$order->static_fee,
-                    'platform_fee'=>$order->fee_value + $order->static_fee,
-                    'processor_fee'=>$order->payment_processor_fee,
-                    'delivery'=>$order->delivery_price,
-                    'net_price_with_vat'=>$order->order_price_with_discount,
-                    'vat'=>$order->vatvalue,
-                    'net_price'=>$order->order_price_with_discount - $order->vatvalue,
-                    'order_total'=>$order->delivery_price + $order->order_price_with_discount,
-                    'discount'=>$order->discount
-                  ];
+                    'order_id' => $order->id,
+                    'restaurant_name' => $order->restorant->name,
+                    'restaurant_id' => $order->restorant_id,
+                    'created' => $order->created_at,
+                    'last_status' => $order->status->pluck('alias')->last(),
+                    'client_name' => $order->client ? $order->client->name : '',
+                    'client_id' => $order->client_id,
+                    'address' => $order->address ? $order->address->address : '',
+                    'address_id' => $order->address_id,
+                    'driver_name' => $order->driver ? $order->driver->name : '',
+                    'driver_id' => $order->driver_id,
+                    'payment_method' => $order->payment_method,
+                    'srtipe_payment_id' => $order->srtipe_payment_id,
+                    'restaurant_fee' => $order->fee,
+                    'order_fee' => $order->fee_value,
+                    'restaurant_static_fee' => $order->static_fee,
+                    'platform_fee' => $order->fee_value + $order->static_fee,
+                    'processor_fee' => $order->payment_processor_fee,
+                    'delivery' => $order->delivery_price,
+                    'net_price_with_vat' => $order->order_price_with_discount,
+                    'vat' => $order->vatvalue,
+                    'net_price' => $order->order_price_with_discount - $order->vatvalue,
+                    'order_total' => $order->delivery_price + $order->order_price_with_discount,
+                    'discount' => $order->discount,
+                ];
                 array_push($items, $item);
             }
 
@@ -214,15 +214,15 @@ class FinanceController extends Controller
 
         //CARDS
         $cards = [
-            ['title'=>'Orders', 'value'=>0],
-            ['title'=>'Total', 'value'=>0, 'isMoney'=>true],
-            ['title'=>'Platform Fee', 'value'=>0, 'isMoney'=>true],
-            ['title'=>'Net inc. Vat', 'value'=>0, 'isMoney'=>true],
+            ['title' => 'Orders', 'value' => 0],
+            ['title' => 'Total', 'value' => 0, 'isMoney' => true],
+            ['title' => 'Platform Fee', 'value' => 0, 'isMoney' => true],
+            ['title' => 'Net inc. Vat', 'value' => 0, 'isMoney' => true],
 
-            ['title'=>'VAT', 'value'=>0, 'isMoney'=>true],
-            ['title'=>'Net', 'value'=>0, 'isMoney'=>true],
-            ['title'=>'Deliveries', 'value'=>0],
-            ['title'=>'Delivery cost', 'value'=>0, 'isMoney'=>true],
+            ['title' => 'VAT', 'value' => 0, 'isMoney' => true],
+            ['title' => 'Net', 'value' => 0, 'isMoney' => true],
+            ['title' => 'Deliveries', 'value' => 0],
+            ['title' => 'Delivery cost', 'value' => 0, 'isMoney' => true],
         ];
         foreach ($resources['orders']->get() as $key => $order) {
             $cards[0]['value'] += 1;
@@ -237,24 +237,24 @@ class FinanceController extends Controller
         }
 
         $displayParam = [
-            'cards'=> $cards,
+            'cards' => $cards,
             'orders' => $resources['orders']->paginate(10),
-            'restorants'=>$resources['restorants'],
-            'drivers'=>$resources['drivers'],
-            'clients'=>$resources['clients'],
-            'parameters'=>count($_GET) != 0,
-            'stripe_details_submitted'=>$stripe_details_submitted,
-            'showFeeTerms'=>true,
-            'showStripeConnect'=>true,
-            'restaurant'=>$restaurant,
-            'weHaveStripeConnect'=>env('ENABLE_STRIPE_CONNECT', false),
-            'statuses'=>Status::pluck('name','id')->toArray()
+            'restorants' => $resources['restorants'],
+            'drivers' => $resources['drivers'],
+            'clients' => $resources['clients'],
+            'parameters' => count($_GET) != 0,
+            'stripe_details_submitted' => $stripe_details_submitted,
+            'showFeeTerms' => true,
+            'showStripeConnect' => true,
+            'restaurant' => $restaurant,
+            'weHaveStripeConnect' => env('ENABLE_STRIPE_CONNECT', false),
+            'statuses' => Status::pluck('name', 'id')->toArray(),
         ];
 
         return view('finances.index', $displayParam);
     }
 
-    public function connect()
+    public function connect(): RedirectResponse
     {
 
         //Set our key
@@ -279,7 +279,7 @@ class FinanceController extends Controller
             'refresh_url' => route('finances.owner'),
             'return_url' => route('finances.owner'),
             'type' => 'account_onboarding',
-            ]);
+        ]);
 
         return redirect()->away($account_links->url);
     }

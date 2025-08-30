@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -12,12 +13,13 @@ class PhoneVerificationController extends Controller
         if (config('settings.enable_sms_verification')) {
             $request->user()->callToVerify();
         }
+
         return $request->user()->hasVerifiedPhone()
                         ? redirect()->route('home')
                         : view('auth.verify_sms');
     }
 
-    public function verify(Request $request)
+    public function verify(Request $request): RedirectResponse
     {
         if ($request->user()->verification_code !== $request->code) {
             throw ValidationException::withMessages([

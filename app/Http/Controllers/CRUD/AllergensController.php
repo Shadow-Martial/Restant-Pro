@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\CRUD;
 
-use App\Models\Allergens;
 use App\Http\Controllers\Controller;
+use App\Models\Allergens;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class AllergensController extends Controller
 {
@@ -20,22 +22,19 @@ class AllergensController extends Controller
     private function getFields()
     {
         return [
-            ['ftype'=>'image', 'name'=>__('Allergen image'), 'id'=>'image'],
-            ['ftype'=>'input', 'name'=>'Title', 'id'=>'title', 'placeholder'=>__('Enter title'), 'required'=>true],
+            ['ftype' => 'image', 'name' => __('Allergen image'), 'id' => 'image'],
+            ['ftype' => 'input', 'name' => 'Title', 'id' => 'title', 'placeholder' => __('Enter title'), 'required' => true],
             //['ftype'=>'input', 'name'=>'Description', 'id'=>'description', 'placeholder'=>__('Enter description'), 'required'=>true],
         ];
     }
 
     /**
      * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(): View
     {
         $this->validateAccess();
 
-        
         return view('crud.allergens.index', ['setup' => [
             'iscontent' => true,
             'title' => __('Allergens'),
@@ -52,10 +51,8 @@ class AllergensController extends Controller
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(): View
     {
         $this->validateAccess();
 
@@ -66,21 +63,18 @@ class AllergensController extends Controller
             'iscontent' => true,
             'action' => route('admin.allergens.store'),
             'breadcrumbs' => [
-               // [__('Landing Page'), route('admin.landing')],
+                // [__('Landing Page'), route('admin.landing')],
                 [__('Allergens'), route('admin.allergens.index')],
                 [__('New'), null],
             ],
         ],
-        'fields'=>$this->getFields(), ]);
+            'fields' => $this->getFields(), ]);
     }
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $this->validateAccess();
         //Validate first
@@ -92,8 +86,8 @@ class AllergensController extends Controller
         $allergen = Allergens::create([
             'post_type' => 'allergen',
             'title' => $request->title,
-           // 'description' => $request->description,
-            'image'=>'',
+            // 'description' => $request->description,
+            'image' => '',
         ]);
 
         $allergen->save();
@@ -103,7 +97,7 @@ class AllergensController extends Controller
                 $this->imagePath,
                 $request->image,
                 [
-                    ['name'=>'large', 'w'=>48, 'h'=>48],
+                    ['name' => 'large', 'w' => 48, 'h' => 48],
                 ]
             );
             $allergen->update();
@@ -115,7 +109,6 @@ class AllergensController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Allergens  $allergens
      * @return \Illuminate\Http\Response
      */
     public function show(Allergens $allergens)
@@ -127,9 +120,8 @@ class AllergensController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\Allergens  $allergens
-     * @return \Illuminate\Http\Response
      */
-    public function edit(Allergens $allergen)
+    public function edit(Allergens $allergen): View
     {
         $this->validateAccess();
         $fields = $this->getFields();
@@ -150,17 +142,15 @@ class AllergensController extends Controller
                 [$allergen->id, null],
             ],
         ],
-        'fields'=>$fields, ]);
+            'fields' => $fields, ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Allergens  $allergens
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Allergens $allergen)
+    public function update(Request $request, Allergens $allergen): RedirectResponse
     {
         $this->validateAccess();
 
@@ -172,7 +162,7 @@ class AllergensController extends Controller
                 $this->imagePath,
                 $request->image,
                 [
-                    ['name'=>'large', 'w'=>48, 'h'=>48],
+                    ['name' => 'large', 'w' => 48, 'h' => 48],
                 ]
             );
         }
@@ -186,9 +176,8 @@ class AllergensController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Allergens  $allergens
-     * @return \Illuminate\Http\Response
      */
-    public function destroy(Allergens $allergen)
+    public function destroy(Allergens $allergen): RedirectResponse
     {
         $this->validateAccess();
 

@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Twilio\Jwt\ClientToken;
+use Illuminate\View\View;
 
 class SmsController extends Controller
 {
     protected $code;
+
     protected $smsVerifcation;
 
     public function __construct()
@@ -26,14 +27,13 @@ class SmsController extends Controller
         return $this->sendSms($request); // send and return its response
     }
 
-    public function verifyContact(Request $request)
+    public function verifyContact(Request $request): RedirectResponse
     {
         $smsVerifcation = $this->smsVerifcation::where('contact_number', '=', $request->contact_number)->latest() //show the latest if there are multiple
-                                                                                                    ->first();
+            ->first();
         if ($request->code == $smsVerifcation->code) {
             $request['status'] = 'verified';
 
-            
             $smsVerifcation->updateModel($request);
 
             $msg['message'] = 'verified';
@@ -41,7 +41,6 @@ class SmsController extends Controller
             return redirect()->route('home');
         } else {
             $msg['message'] = 'not verified';
-
 
             return redirect()->route('sms.verify');
         }
@@ -54,11 +53,11 @@ class SmsController extends Controller
         try {
             $client = new Client(['auth' => [$accountSid, $authToken]]);
             $result = $client->post('https://api.twilio.com/2010-04-01/Accounts/'.$accountSid.'/Messages.json',
-            ['form_params' => [
-                'Body' => 'CODE: '.$request->code, //set message body
-                'To' => $request->contact_number,
-                'From' => '+16504108569', //we get this number from twilio
-            ]]);
+                ['form_params' => [
+                    'Body' => 'CODE: '.$request->code, //set message body
+                    'To' => $request->contact_number,
+                    'From' => '+16504108569', //we get this number from twilio
+                ]]);
 
             return $result;
         } catch (Exception $e) {
@@ -66,7 +65,7 @@ class SmsController extends Controller
         }
     }
 
-    public function verifyPage()
+    public function verifyPage(): View
     {
         return view('auth.verify_sms');
     }

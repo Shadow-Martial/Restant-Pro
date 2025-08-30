@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use Database\Seeders\CitiesTableSeeder;
-use Database\Seeders\LandingPageSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -13,10 +11,8 @@ class DemoSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         /**
          * Restorant
@@ -31,8 +27,6 @@ class DemoSeeder extends Seeder
          * Expenses / since 2_5
          * Blog / since 3.1.5
          */
-
-        
 
         //Cities
         $this->call(CitiesTableSeeder::class);
@@ -53,28 +47,28 @@ class DemoSeeder extends Seeder
             $demoOrdersLast3Days = \App\Order::factory()->count(100)->recent()->create();
 
             //Whatsapp and POS
-            if(config('settings.is_whatsapp_ordering_mode')
-                ||config('settings.is_pos_cloud_mode')
-                ||config('settings.is_agris_mode')
-                ||config('app.issd')){
+            if (config('settings.is_whatsapp_ordering_mode')
+                || config('settings.is_pos_cloud_mode')
+                || config('settings.is_agris_mode')
+                || config('app.issd')) {
                 $this->call(LandingPageSeeder::class);
             }
 
             //Agris
-            if(config('settings.is_agris_mode')){
+            if (config('settings.is_agris_mode')) {
                 $this->call(AgrisSeeder::class);
             }
-        }else if (config('app.isdrive')) {
+        } elseif (config('app.isdrive')) {
             //FT Social Dirve
             $this->call(PlansSeeder::class);
 
-            $demoClientId=DB::table('users')->insertGetId([
+            $demoClientId = DB::table('users')->insertGetId([
                 'name' => 'Demo Client 1',
-                'email' =>  'client@example.com',
+                'email' => 'client@example.com',
                 'password' => Hash::make('secret'),
                 'api_token' => Str::random(80),
                 'email_verified_at' => now(),
-                'phone' =>  '',
+                'phone' => '',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -82,21 +76,21 @@ class DemoSeeder extends Seeder
             //Assign client role
             DB::table('model_has_roles')->insert([
                 'role_id' => 4,
-                'model_type' =>  \App\User::class,
-                'model_id'=> $demoClientId,
+                'model_type' => \App\User::class,
+                'model_id' => $demoClientId,
             ]);
-         } else {
+        } else {
             //Pure FT
             $this->call(PlansSeeder::class);
 
             //Driver
-            $demoDriverId=DB::table('users')->insertGetId([
+            $demoDriverId = DB::table('users')->insertGetId([
                 'name' => 'Demo Driver',
-                'email' =>  'driver@example.com',
+                'email' => 'driver@example.com',
                 'password' => Hash::make('secret'),
                 'api_token' => Str::random(80),
                 'email_verified_at' => now(),
-                'phone' =>  '',
+                'phone' => '',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -104,18 +98,18 @@ class DemoSeeder extends Seeder
             //Assign driver role
             DB::table('model_has_roles')->insert([
                 'role_id' => 3,
-                'model_type' =>  \App\User::class,
-                'model_id'=> $demoDriverId,
+                'model_type' => \App\User::class,
+                'model_id' => $demoDriverId,
             ]);
 
             //Client 1
-            $demoClientId=DB::table('users')->insertGetId([
+            $demoClientId = DB::table('users')->insertGetId([
                 'name' => 'Demo Client 1',
-                'email' =>  'client@example.com',
+                'email' => 'client@example.com',
                 'password' => Hash::make('secret'),
                 'api_token' => Str::random(80),
                 'email_verified_at' => now(),
-                'phone' =>  '',
+                'phone' => '',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -123,18 +117,18 @@ class DemoSeeder extends Seeder
             //Assign client role
             DB::table('model_has_roles')->insert([
                 'role_id' => 4,
-                'model_type' =>  \App\User::class,
-                'model_id'=> $demoClientId,
+                'model_type' => \App\User::class,
+                'model_id' => $demoClientId,
             ]);
 
             //Client 2
-            $demoClientId2=DB::table('users')->insertGetId([
+            $demoClientId2 = DB::table('users')->insertGetId([
                 'name' => 'Demo Client 2',
-                'email' =>  'client2@example.com',
+                'email' => 'client2@example.com',
                 'password' => Hash::make('secret'),
                 'api_token' => Str::random(80),
                 'email_verified_at' => now(),
-                'phone' =>  '',
+                'phone' => '',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -142,18 +136,18 @@ class DemoSeeder extends Seeder
             //Assign client role
             DB::table('model_has_roles')->insert([
                 'role_id' => 4,
-                'model_type' =>  \App\User::class,
-                'model_id'=> $demoClientId2,
+                'model_type' => \App\User::class,
+                'model_id' => $demoClientId2,
             ]);
 
             //Driver 2
-            $demoDriverId2=DB::table('users')->insertGetId([
+            $demoDriverId2 = DB::table('users')->insertGetId([
                 'name' => 'Demo Driver 2',
-                'email' =>  'driver2@example.com',
+                'email' => 'driver2@example.com',
                 'password' => Hash::make('secret'),
                 'api_token' => Str::random(80),
                 'email_verified_at' => now(),
-                'phone' =>  '',
+                'phone' => '',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -161,8 +155,8 @@ class DemoSeeder extends Seeder
             //Assign driver role
             DB::table('model_has_roles')->insert([
                 'role_id' => 3,
-                'model_type' =>  \App\User::class,
-                'model_id'=> $demoDriverId2,
+                'model_type' => \App\User::class,
+                'model_id' => $demoDriverId2,
             ]);
 
             //Addresses
@@ -177,7 +171,7 @@ class DemoSeeder extends Seeder
             foreach ($demoOrders as $key => $order) {
                 DB::table('order_has_status')->insert([
                     'order_id' => $order->id,
-                    'status_id' =>  1,
+                    'status_id' => 1,
                     'user_id' => 4,
                     'comment' => 'Initial comment',
                     'created_at' => now(),
@@ -190,7 +184,7 @@ class DemoSeeder extends Seeder
                 //JUST created
                 DB::table('order_has_status')->insert([
                     'order_id' => $order->id,
-                    'status_id' =>  1,
+                    'status_id' => 1,
                     'user_id' => 4,
                     'comment' => 'New order created',
                     'created_at' => now(),
@@ -202,7 +196,7 @@ class DemoSeeder extends Seeder
                     //Add orders items
                     DB::table('order_has_items')->insert([
                         'order_id' => $order->id,
-                        'item_id' =>  7,
+                        'item_id' => 7,
                         'qty' => 2,
                         'extras' => '["Peperoni + $2.00","Olive + $1.00"]',
                         'vat' => 21,
@@ -215,7 +209,7 @@ class DemoSeeder extends Seeder
 
                     DB::table('order_has_items')->insert([
                         'order_id' => $order->id,
-                        'item_id' =>  8,
+                        'item_id' => 8,
                         'qty' => 1,
                         'extras' => '["Peperoni + $1.00","Olive + $1.00"]',
                         'vat' => 21,
@@ -226,14 +220,14 @@ class DemoSeeder extends Seeder
                         'updated_at' => now(),
                     ]);
 
-                    DB::table('orders')->where('id', $order->id)->update(['order_price' => 55.97, 'vatvalue'=>11.75]);
+                    DB::table('orders')->where('id', $order->id)->update(['order_price' => 55.97, 'vatvalue' => 11.75]);
                 }
 
                 //Every 10th rejected by admin
                 if ($order->id % 10 == 0) {
                     DB::table('order_has_status')->insert([
                         'order_id' => $order->id,
-                        'status_id' =>  8,
+                        'status_id' => 8,
                         'user_id' => 1,
                         'comment' => 'Rejected by admin',
                         'created_at' => now(),
@@ -245,7 +239,7 @@ class DemoSeeder extends Seeder
                     if ($order->id % 9 != 0) {
                         DB::table('order_has_status')->insert([
                             'order_id' => $order->id,
-                            'status_id' =>  2,
+                            'status_id' => 2,
                             'user_id' => 1,
                             'comment' => 'Accepted by admin',
                             'created_at' => now(),
@@ -256,7 +250,7 @@ class DemoSeeder extends Seeder
                         if ($order->id % 24 == 0) {
                             DB::table('order_has_status')->insert([
                                 'order_id' => $order->id,
-                                'status_id' =>  9,
+                                'status_id' => 9,
                                 'user_id' => 1,
                                 'comment' => 'Rejected by restaurant',
                                 'created_at' => now(),
@@ -266,7 +260,7 @@ class DemoSeeder extends Seeder
                             if ($order->id % 2 == 0) {
                                 DB::table('order_has_status')->insert([
                                     'order_id' => $order->id,
-                                    'status_id' =>  3,
+                                    'status_id' => 3,
                                     'user_id' => 1,
                                     'comment' => 'Accepted by restaurant',
                                     'created_at' => now(),
@@ -275,7 +269,7 @@ class DemoSeeder extends Seeder
                                 if ($order->id % 4 == 0) {
                                     DB::table('order_has_status')->insert([
                                         'order_id' => $order->id,
-                                        'status_id' =>  4,
+                                        'status_id' => 4,
                                         'user_id' => 1,
                                         'comment' => 'Assigned to driver',
                                         'created_at' => now(),
@@ -285,7 +279,7 @@ class DemoSeeder extends Seeder
                                     $order->update();
                                     DB::table('order_has_status')->insert([
                                         'order_id' => $order->id,
-                                        'status_id' =>  5,
+                                        'status_id' => 5,
                                         'user_id' => 1,
                                         'comment' => 'Prepared by restaurant',
                                         'created_at' => now(),
@@ -299,17 +293,17 @@ class DemoSeeder extends Seeder
                                         'created_at' => now(),
                                         'updated_at' => now(),
                                         'rateable_id' => $order->restorant_id,
-                                        'order_id'=>$order->id,
-                                        'rating'=>[4, 5][array_rand([4, 5], 1)],
-                                        'user_id'=>4,
-                                        'rateable_type'=>\App\Restorant::class,
-                                        'comment'=> $comments[array_rand($comments, 1)],
+                                        'order_id' => $order->id,
+                                        'rating' => [4, 5][array_rand([4, 5], 1)],
+                                        'user_id' => 4,
+                                        'rateable_type' => \App\Restorant::class,
+                                        'comment' => $comments[array_rand($comments, 1)],
                                     ]);
 
                                     if ($order->id % 8 == 0) {
                                         DB::table('order_has_status')->insert([
                                             'order_id' => $order->id,
-                                            'status_id' =>  6,
+                                            'status_id' => 6,
                                             'user_id' => 1,
                                             'comment' => 'Picked up',
                                             'created_at' => now(),
@@ -321,7 +315,7 @@ class DemoSeeder extends Seeder
                                         if ($order->id % 16 == 0) {
                                             DB::table('order_has_status')->insert([
                                                 'order_id' => $order->id,
-                                                'status_id' =>  7,
+                                                'status_id' => 7,
                                                 'user_id' => 1,
                                                 'comment' => 'Delivered',
                                                 'created_at' => now(),

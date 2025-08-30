@@ -11,7 +11,16 @@
 @if (\Akaunting\Module\Facade::has('googleanalytics'))
     @include('googleanalytics::index') 
 @endif
+
+<style>
+    {{ $restorant->getConfig('custom_menu_css','') }}
+</style>
+
+{!! $restorant->getConfig('custom_menu_js','') !!}
+
 @endsection
+
+
 
 @section('addiitional_button_3')
     @include('restorants.partials.itemsearch')
@@ -36,7 +45,9 @@
     @endif
 @endsection
 
-@section('content')
+
+
+@section('content') 
 <?php
     function clean($string) {
         $string = str_replace(' ', '-', $string); // Replaces all spaces with hyphens.
@@ -64,8 +75,10 @@
                 <div class="col-lg-12">
                     <div class="title white"  <?php if($restorant->description){echo 'style="border-bottom: 1px solid #f2f2f2;"';} ?> >
                         <h1 class="display-3 text-white notranslate" data-toggle="modal" data-target="#modal-restaurant-info" style="cursor: pointer;">{{ $restorant->name }}</h1>
-                        <p class="display-4" style="margin-top: 120px">{{ $restorant->description }}</p>
                         
+                        <p class="display-4" style="margin-top: 120px">{{ $restorant->description }}</p>
+                        @include('restorants.partials.social_links')
+
                         <p><i class="ni ni-watch-time"></i> @if(!empty($openingTime))<span class="closed_time">{{__('Opens')}} {{ $openingTime }}</span>@endif @if(!empty($closingTime))<span class="opened_time">{{__('Opened until')}} {{ $closingTime }}</span> @endif |   @if(!empty($restorant->address))<i class="ni ni-pin-3"></i></i> <a target="_blank" href="https://www.google.com/maps/search/?api=1&query={{ urlencode($restorant->address) }}"><span class="notranslate">{{ $restorant->address }}</span></a>  | @endif @if(!empty($restorant->phone)) <i class="ni ni-mobile-button"></i> <a href="tel:{{$restorant->phone}}">{{ $restorant->phone }} </a> @endif</p>
                     </div>
                 </div>
@@ -94,6 +107,7 @@
                     <div class="title">
                         <h1 class="display-3 text notranslate" data-toggle="modal" data-target="#modal-restaurant-info" style="cursor: pointer;">{{ $restorant->name }}</h1>
                         <p class="display-4 text">{{ $restorant->description }}</p>
+                        @include('restorants.partials.social_links')
                         <p><i class="ni ni-watch-time"></i> @if(!empty($openingTime))<span class="closed_time">{{__('Opens')}} {{ $openingTime }}</span>@endif @if(!empty($closingTime))<span class="opened_time">{{__('Opened until')}} {{ $closingTime }}</span> @endif   @if(!empty($restorant->address))<i class="ni ni-pin-3"></i></i> <a target="_blank" href="https://www.google.com/maps/search/?api=1&query={{ urlencode($restorant->address) }}">{{ $restorant->address }}</a>  | @endif @if(!empty($restorant->phone)) <i class="ni ni-mobile-button"></i> <a href="tel:{{$restorant->phone}}">{{ $restorant->phone }} </a> @endif</p>
                     </div>
                 </div>
@@ -144,10 +158,16 @@
                             <div class="strip">
                                 @if(!empty($item->image))
                                 <figure>
-                                    <a onClick="setCurrentItem({{ $item->id }})" href="javascript:void(0)"><img src="{{ $item->logom }}" loading="lazy" data-src="{{ config('global.restorant_details_image') }}" class="img-fluid lazy" alt=""></a>
+                                    <a  @if (!($item->qty_management==1&&$item->qty<1)) onClick="setCurrentItem({{ $item->id }})" @endif href="javascript:void(0)"><img src="{{ $item->logom }}" loading="lazy" data-src="{{ config('global.restorant_details_image') }}" class="img-fluid lazy" alt=""></a>
                                 </figure>
                                 @endif
-                                <div class="res_title"><b><a onClick="setCurrentItem({{ $item->id }})" href="javascript:void(0)">{{ $item->name }}</a></b></div>
+                                
+                                @if ($item->qty_management==1&&$item->qty<1)
+                                    [{{ __('Out of stock')}}] - {{ $item->name }}
+                                @else
+                                    <div class="res_title"><b><a onClick="setCurrentItem({{ $item->id }})" href="javascript:void(0)">{{ $item->name }}</a></b></div>
+                                @endif
+
                                 <div class="res_description">{{ $item->short_description}}</div>
                                 <div class="row">
                                     <div class="col-6">
@@ -193,10 +213,12 @@
                 
                 <!-- Check if there is value -->
                 @if (strlen($restorant->getConfig('impressum_value',''))>5)
-                    <h3>{{  __($restorant->getConfig('impressum_title','')) }}</h3>
-                    <?php echo __($restorant->getConfig('impressum_value','')); ?>
+                    <h3>{{  __(htmlspecialchars($restorant->getConfig('impressum_title',''))) }}</h3>
+                    <?php echo __(htmlspecialchars($restorant->getConfig('impressum_value',''))); ?>
                 @endif
             @endif
+
+           
             
         </div>
 
@@ -288,6 +310,7 @@
         var LOCALE="<?php echo  App::getLocale() ?>";
         var IS_POS=false;
         var TEMPLATE_USED="<?php echo config('settings.front_end_template','defaulttemplate') ?>";
+        var PID = "{{ isset($_GET['pid']) ? $_GET['pid'] : '' }}";
     </script>
     <script src="{{ asset('custom') }}/js/order.js"></script>
     @include('restorants.phporderinterface') 

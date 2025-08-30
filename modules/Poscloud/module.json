@@ -1,6 +1,6 @@
 {
     "alias": "poscloud",
-    "version":"1.4",
+    "version":"2.7",
     "description": "",
     "keywords": [],
     "active": 1,
@@ -11,7 +11,33 @@
     "aliases": {},
     "files": [],
     "requires": [],
+    "vendor_fields":[{
+        "separator":"POS",
+        "title": "Enable POS",
+        "key": "pos_enable",
+        "ftype": "bool",
+        "value":true
+    },
+    {
+        "title": "Show external orders",
+        "key": "external_orders",
+        "ftype": "bool",
+        "value":false
+    },
+    {
+        "title": "Order completed once paid",
+        "key": "order_completed_once_paid",
+        "ftype": "bool",
+        "value":false
+    }],
     "ownermenus":[
+        {
+            "name":"POS",
+            "route":"poscloud.index",
+            "icon":"ni ni-tv-2 text-primary"
+        }
+    ],
+    "staffmenus":[
         {
             "name":"POS",
             "route":"poscloud.index",

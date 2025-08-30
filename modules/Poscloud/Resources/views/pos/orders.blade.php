@@ -39,7 +39,7 @@
                 </thead>
                 <tbody id="orderList"  v-for="item in items">
                  
-                    <tr v-cloak class="mt-3 orderRow" v-on:click="openDetails(item.id,item.receipt_number)"  v-bind:id="item.id">
+                    <tr v-cloak class="mt-3 orderRow" v-on:click="openDetailsItem(item)"  v-bind:id="item.id">
                         <td class="">
                             <span class="text-secondary text-xs font-weight-bold">@{{ item.date }}</span>
                         </td>

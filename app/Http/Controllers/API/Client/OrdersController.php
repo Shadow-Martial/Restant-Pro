@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\API\Client;
 
-use App\Repositories\Orders\OrderRepoGenerator;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Order;
+use App\Repositories\Orders\OrderRepoGenerator;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class OrdersController extends Controller
 {
-    public function index()
+    public function index(): JsonResponse
     {
         return response()->json([
             'data' => Order::where('client_id', auth()->user()->id)->orderBy('id', 'DESC')->limit(50)->with(['restorant', 'status', 'items', 'address', 'driver'])->get(),
@@ -19,10 +20,11 @@ class OrdersController extends Controller
         ]);
     }
 
-    public function store(Request $request){
- 
+    public function store(Request $request): JsonResponse
+    {
+
         //Init validator
-        $validatorOnInit = Validator::make($request->all(), ['vendor_id'=>['required']]);
+        $validatorOnInit = Validator::make($request->all(), ['vendor_id' => ['required']]);
         if ($validatorOnInit->fails()) {
             return response()->json([
                 'status' => false,
@@ -30,21 +32,19 @@ class OrdersController extends Controller
             ]);
         }
 
-
         //Data
-        $mobileLikeRequest=$request;
-        $vendor_id =  $mobileLikeRequest->vendor_id;
-        $expedition= $mobileLikeRequest->delivery_method;
-        $hasPayment= $mobileLikeRequest->payment_method!="cod";
-        $isStripe= $mobileLikeRequest->payment_method=="stripe";
+        $mobileLikeRequest = $request;
+        $vendor_id = $mobileLikeRequest->vendor_id;
+        $expedition = $mobileLikeRequest->delivery_method;
+        $hasPayment = $mobileLikeRequest->payment_method != 'cod';
+        $isStripe = $mobileLikeRequest->payment_method == 'stripe';
 
         //Repo Holder
-        $orderRepo=OrderRepoGenerator::makeOrderRepo($vendor_id,$mobileLikeRequest,$expedition,$hasPayment,$isStripe,true);
-    
-        
+        $orderRepo = OrderRepoGenerator::makeOrderRepo($vendor_id, $mobileLikeRequest, $expedition, $hasPayment, $isStripe, true);
+
         //Proceed with validating the data
-        $validator=$orderRepo->validateData();
-        if ($validator->fails()) { 
+        $validator = $orderRepo->validateData();
+        if ($validator->fails()) {
             return response()->json([
                 'status' => false,
                 'message' => $validator->errors()->first(),
@@ -52,8 +52,8 @@ class OrdersController extends Controller
         }
 
         //Proceed with making the order
-        $validatorOnMaking=$orderRepo->makeOrder();
-        if ($validatorOnMaking->fails()) { 
+        $validatorOnMaking = $orderRepo->makeOrder();
+        if ($validatorOnMaking->fails()) {
             return response()->json([
                 'status' => false,
                 'message' => $validatorOnMaking->errors()->first(),
@@ -63,9 +63,9 @@ class OrdersController extends Controller
         return response()->json([
             'status' => true,
             'message' => __('Order created'),
-            'id'=>$orderRepo->order->id,
-            'paymentLink'=>$orderRepo->paymentRedirect
+            'id' => $orderRepo->order->id,
+            'paymentLink' => $orderRepo->paymentRedirect,
         ]);
-         
+
     }
 }

@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Akaunting\Module\Facade as Module;
-use App\Address;
 use App\Categories;
 use App\Extras;
 use App\Items;
@@ -12,14 +12,15 @@ use App\Notifications\SystemTest;
 use App\Restorant;
 use App\Settings;
 use File;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
-use Image;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
+use Image;
 
 class SettingsController extends Controller
 {
@@ -36,24 +37,26 @@ class SettingsController extends Controller
      * @return \Illuminate\Http\Response
      */
     protected static $currencies;
+
     protected static $jsfront;
+
     protected $imagePath = '/uploads/settings/';
 
-    public function systemstatus()
+    public function systemstatus(): View
     {
         $totalTasks = 2;
 
-         //Verify Stripe
-         $processor=config('settings.subscription_processor','stripe');
-         $plansEnabled=config('settings.enable_pricing',false);
-         $doStripeVerification=false;
-         if($processor=="Stripe"&&$plansEnabled){
-             $totalTasks++;
-             $doStripeVerification=true;
-         }
+        //Verify Stripe
+        $processor = config('settings.subscription_processor', 'stripe');
+        $plansEnabled = config('settings.enable_pricing', false);
+        $doStripeVerification = false;
+        if ($processor == 'Stripe' && $plansEnabled) {
+            $totalTasks++;
+            $doStripeVerification = true;
+        }
 
-         $percent = 100 / $totalTasks;
-         $taskDone = 0;
+        $percent = 100 / $totalTasks;
+        $taskDone = 0;
 
         //Verify system is setup correctly.
         if (! auth()->user()->hasRole('admin')) {
@@ -74,12 +77,12 @@ class SettingsController extends Controller
                     $taskDone++;
 
                     //Stripe
-                    if($doStripeVerification){
-                        if(strlen(config('settings.stripe_secret'))>3
-                        && strlen(config('settings.stripe_key'))>3){
+                    if ($doStripeVerification) {
+                        if (strlen(config('settings.stripe_secret')) > 3
+                        && strlen(config('settings.stripe_key')) > 3) {
                             array_push($testResutls, ['settings_stripe', 'OK', true]);
                             $taskDone++;
-                        }else{
+                        } else {
                             array_push($testResutls, ['settings_stripe', 'settings_stripe_not_ok', false, 'https://mobidonia.gitbook.io/plugins/subscriptions-plugins/stripe']);
                         }
                     }
@@ -94,14 +97,13 @@ class SettingsController extends Controller
             array_push($testResutls, ['settings_default_admin_email', 'settings_using_default_admin_solution', false, 'https://mobidonia.gitbook.io/qr-menu-maker/usage/getting-started#login-as-admin']);
         }
 
-        if($taskDone==$totalTasks){
+        if ($taskDone == $totalTasks) {
             $data = json_encode(['date' => date('Y/m/d h:i:s')]);
             file_put_contents(storage_path('verified'), $data, FILE_APPEND | LOCK_EX);
         }
 
-       
         return view('settings.status', [
-            'progress'=>ceil($taskDone * $percent),
+            'progress' => ceil($taskDone * $percent),
             'testResutls' => $testResutls, ]);
     }
 
@@ -112,25 +114,25 @@ class SettingsController extends Controller
         foreach ($items as $key => $item) {
             $object = $provider::find($item->id);
             foreach ($fields as $keyFields => $valueField) {
-                $valueToStore="";
-                if($object){
-                    if($valueField=="name"){
-                        $valueToStore=$item->name; 
-                    }else if($valueField=="description"){
-                        $valueToStore=$item->description;
+                $valueToStore = '';
+                if ($object) {
+                    if ($valueField == 'name') {
+                        $valueToStore = $item->name;
+                    } elseif ($valueField == 'description') {
+                        $valueToStore = $item->description;
                     }
-                    
-                    if(is_numeric($valueToStore)){
-                        $valueToStore=$valueToStore.".";
+
+                    if (is_numeric($valueToStore)) {
+                        $valueToStore = $valueToStore.'.';
                     }
                     $object->setTranslation($valueField, $locale, $valueToStore)->save();
                 }
-                
+
             }
         }
     }
 
-    public function translateMenu()
+    public function translateMenu(): RedirectResponse
     {
         if (auth()->user()->hasRole('admin')) {
             $locale = config('settings.app_locale');
@@ -152,10 +154,10 @@ class SettingsController extends Controller
             $currentEnvLanguage = isset(config('config.env')[2]['fields'][0]['data'][$locale]) ? config('config.env')[2]['fields'][0]['data'][$locale] : 'UNKNOWN';
             foreach ($allRestaurants as $key => $restaurant) {
                 $localMenu = new LocalMenu([
-                    'restaurant_id'=>$restaurant->id,
-                     'language'=>$locale,
-                      'languageName'=>$currentEnvLanguage,
-                      'default'=>'1', ]
+                    'restaurant_id' => $restaurant->id,
+                    'language' => $locale,
+                    'languageName' => $currentEnvLanguage,
+                    'default' => '1', ]
                 );
                 $localMenu->save();
             }
@@ -176,15 +178,14 @@ class SettingsController extends Controller
         $envConfigs = config('config.env');
 
         //Extra fields from included modules
-        $extraFields=[];
+        $extraFields = [];
         foreach (Module::all() as $key => $module) {
-            if($module->get('global_fields')){
-                $extraFields=array_merge($extraFields,$module->get('global_fields'));
+            if ($module->get('global_fields')) {
+                $extraFields = array_merge($extraFields, $module->get('global_fields'));
             }
-            
-        }
-        $envConfigs['3']['fields']=array_merge($extraFields,$envConfigs['3']['fields']);
 
+        }
+        $envConfigs['3']['fields'] = array_merge($extraFields, $envConfigs['3']['fields']);
 
         //Since 2.2.x there is custom modules
         $envMerged = [];
@@ -192,128 +193,90 @@ class SettingsController extends Controller
             $theMegedGroupFields = [];
             foreach ($group['fields'] as $key => $field) {
                 if (! (isset($field['onlyin']) && $field['onlyin'] != config('settings.app_project_type'))) {
-                    array_push($theMegedGroupFields, [
-                        'ftype'=>isset($field['ftype']) ? $field['ftype'] : 'input',
-                        'type'=>isset($field['type']) ? $field['type'] : 'text',
-                        'id'=>'env['.$field['key'].']',
-                        'name'=>isset($field['title']) && $field['title'] != '' ? $field['title'] : $field['key'],
-                        'placeholder'=>isset($field['placeholder']) ? $field['placeholder'] : '',
-                        'value'=>env($field['key'], $field['value']),
-                        'required'=>false,
-                        'separator'=>isset($field['separator']) ? $field['separator'] : null,
-                        'additionalInfo'=>isset($field['help']) ? $field['help'] : null,
-                        'data'=>isset($field['data']) ? $field['data'] : [],
-                     ]);
+
+                    $shouldBeAdded = true;
+
+                    //Hide on specific env config
+                    if (isset($field['hideon'])) {
+                        $hideOn = explode(',', $field['hideon']);
+                        foreach ($hideOn as $hideSpecific) {
+                            if (config('app.'.$hideSpecific, false)) {
+                                $shouldBeAdded = false;
+                            }
+                        }
+                    }
+                    if ($shouldBeAdded) {
+                        array_push($theMegedGroupFields, [
+                            'ftype' => isset($field['ftype']) ? $field['ftype'] : 'input',
+                            'type' => isset($field['type']) ? $field['type'] : 'text',
+                            'id' => 'env['.$field['key'].']',
+                            'name' => isset($field['title']) && $field['title'] != '' ? $field['title'] : $field['key'],
+                            'placeholder' => isset($field['placeholder']) ? $field['placeholder'] : '',
+                            'value' => env($field['key'], $field['value']),
+                            'required' => false,
+                            'separator' => isset($field['separator']) ? $field['separator'] : null,
+                            'additionalInfo' => isset($field['help']) ? $field['help'] : null,
+                            'data' => isset($field['data']) ? $field['data'] : [],
+                        ]);
+                    }
+
                 }
             }
             array_push($envMerged, [
-             'name'=>$group['name'],
-             'slug'=>$group['slug'],
-             'icon'=>$group['icon'],
-             'fields'=>$theMegedGroupFields,
+                'name' => $group['name'],
+                'slug' => $group['slug'],
+                'icon' => $group['icon'],
+                'fields' => $theMegedGroupFields,
             ]);
         }
 
         return $envMerged;
     }
 
-    public function cloudupdate(){
+    public function cloudupdate()
+    {
         //Always run migration
         Artisan::call('migrate', ['--force' => true]);
 
         Artisan::call('module:migrate', ['--force' => true]);
 
         if (auth()->user()->hasRole('admin')) {
-            
-            $memory_limit = ini_get('memory_limit');
-            if (preg_match('/^(\d+)(.)$/', $memory_limit, $matches)) {
-                if ($matches[2] == 'M') {
-                    $memory_limit = $matches[1] * 1024 * 1024; // nnnM -> nnn MB
-                } else if ($matches[2] == 'K') {
-                    $memory_limit = $matches[1] * 1024; // nnnK -> nnn KB
-                } else if ($matches[2] == 'G') {
-                    $memory_limit = $matches[1] * 1024*1024*1024; // nnnM -> GB
-                }
-            }
-            $okMemory=true;
-            if($memory_limit==-1||$memory_limit >= 512 * 1024 * 1024){
-               
-            }else{
-                //Alert
-                $okMemory=false;
-            }
-            
-
-
-            $updater = new \Codedge\Updater\UpdaterManager(app());
-
-            //With update
-            if(isset($_GET['do_update'])){
-                if($updater->source()->isNewVersionAvailable()) {
 
             
-                    // Get the new version available
-                    $versionAvailable = $updater->source()->getVersionAvailable();
-            
-                    // Create a release
-                    $release = $updater->source()->fetch($versionAvailable);
-            
-                    // Run the update process
-                    $updater->source()->update($release);
 
-                    return redirect()->route('settings.cloudupdate')->withStatus(__('Successfully updated to version v').$versionAvailable);
-                    
+            $theChangeLog = '';
+            if (config('settings.enalbe_change_log_in_update')) {
+                $ftChange = 'https://raw.githubusercontent.com/dimovdaniel/foodtigerdocs/master/changelog/changelog.md';
+                $qrChange = 'https://raw.githubusercontent.com/dimovdaniel/qrmakerdocs/master/changelog/changelog.md';
+                $wpChange = 'https://raw.githubusercontent.com/mobidonia/whatsappfooddocs/master/changelog/changelog.md';
+                $pcChange = 'https://raw.githubusercontent.com/dimovdaniel/poscloud/master/changelog/changelog.md';
+                $agChange = 'https://raw.githubusercontent.com/mobidonia/agrisdocs/master/changelog/changelog.md';
+                $wdChange = 'https://raw.githubusercontent.com/mobidonia/whatsappdrive/master/changelog/changelog.md';
+                if (config('app.isft')) {
+                    $theChangeLog = @file_get_contents($ftChange);
                 } else {
-                    return redirect()->route('settings.cloudupdate')->withStatus(__('There is nothing to update!'));
-                }
-            }
-
-            //Check for new version
-            $updater->source()->deleteVersionFile();
-            $newVersion="";
-            $newVersionAvailable = $updater->source()->isNewVersionAvailable();
-            if($newVersionAvailable){
-                $newVersion=$updater->source()->getVersionAvailable();
-            }
-            
-            $theChangeLog="";
-            if(config('settings.enalbe_change_log_in_update')){
-                $ftChange="https://raw.githubusercontent.com/dimovdaniel/foodtigerdocs/master/changelog/changelog.md";
-                $qrChange="https://raw.githubusercontent.com/dimovdaniel/qrmakerdocs/master/changelog/changelog.md";
-                $wpChange="https://raw.githubusercontent.com/mobidonia/whatsappfooddocs/master/changelog/changelog.md";
-                $pcChange="https://raw.githubusercontent.com/dimovdaniel/poscloud/master/changelog/changelog.md";
-                $agChange="https://raw.githubusercontent.com/mobidonia/agrisdocs/master/changelog/changelog.md";
-                $wdChange="https://raw.githubusercontent.com/mobidonia/whatsappdrive/master/changelog/changelog.md";
-                if(config('app.isft')){
-                    $theChangeLog=@file_get_contents($ftChange);
-                }else {
-                    if(config('settings.is_whatsapp_ordering_mode')){
-                        $theChangeLog=@file_get_contents($wpChange);
-                    }else if(config('settings.is_pos_cloud_mode')){
-                        $theChangeLog=@file_get_contents($pcChange);
-                    }else if(config('settings.is_agris_mode')){
-                        $theChangeLog=@file_get_contents($agChange);
-                    }else if(config('app.issd')){
-                        $theChangeLog=@file_get_contents($wdChange);
-                    }else{
-                        $theChangeLog=@file_get_contents($qrChange);
+                    if (config('settings.is_whatsapp_ordering_mode')) {
+                        $theChangeLog = @file_get_contents($wpChange);
+                    } elseif (config('settings.is_pos_cloud_mode')) {
+                        $theChangeLog = @file_get_contents($pcChange);
+                    } elseif (config('settings.is_agris_mode')) {
+                        $theChangeLog = @file_get_contents($agChange);
+                    } elseif (config('app.issd')) {
+                        $theChangeLog = @file_get_contents($wdChange);
+                    } else {
+                        $theChangeLog = @file_get_contents($qrChange);
                     }
                 }
-                $theChangeLog=str_replace('{% embed url="https://youtu.be/','<iframe width="560" height="315" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen src="https://www.youtube.com/embed/',$theChangeLog);
-                $theChangeLog=str_replace('%}','></iframe>',$theChangeLog);
-                $theChangeLog=str_replace('\\','',$theChangeLog);
+                $theChangeLog = str_replace('{% embed url="https://youtu.be/', '<iframe width="560" height="315" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen src="https://www.youtube.com/embed/', $theChangeLog);
+                $theChangeLog = str_replace('%}', '></iframe>', $theChangeLog);
+                $theChangeLog = str_replace('\\', '', $theChangeLog);
             }
-           
-        
-            
-            return view('settings.cloudupdate', [
-                'newVersionAvailable'=>$newVersionAvailable,
-                'newVersion'=>$newVersion,
-                'theChangeLog'=>$theChangeLog,
-                'okMemory'=>$okMemory
-               ]);
 
-        }else{
+            return view('settings.cloudupdate', [
+                'theChangeLog' => $theChangeLog
+            ]);
+
+        } else {
             return redirect()->route('orders.index')->withStatus(__('No Access'));
         }
     }
@@ -336,7 +299,6 @@ class SettingsController extends Controller
             $cssfrontmenu = File::get(base_path('public/byadmin/frontmenu.css'));
             $cssback = File::get(base_path('public/byadmin/back.css'));
 
-
             $hasDemoRestaurants = Restorant::where('phone', '(530) 625-9694')->count() > 0;
 
             if (config('settings.is_demo') | config('settings.is_demo')) {
@@ -346,16 +308,16 @@ class SettingsController extends Controller
             return view('settings.index', [
                 'settings' => $settings->first(),
                 'currencies' => $curreciesArr,
-                'jsfront'=>$jsfront,
-                'jsfrontmenu'=>$jsfrontmenu,
-                'jsback'=>$jsback,
-                'cssfront'=>$cssfront,
-                'cssfrontmenu'=>$cssfrontmenu,
-                'cssback'=>$cssback,
-                'hasDemoRestaurants'=>$hasDemoRestaurants,
-                'envConfigs'=>$this->getCurrentEnv(),
-                'showMultiLanguageMigration'=>env('ENABLE_MILTILANGUAGE_MENUS', false) && ! file_exists(storage_path('multilanguagemigrated')),
-                ]);
+                'jsfront' => $jsfront,
+                'jsfrontmenu' => $jsfrontmenu,
+                'jsback' => $jsback,
+                'cssfront' => $cssfront,
+                'cssfrontmenu' => $cssfrontmenu,
+                'cssback' => $cssback,
+                'hasDemoRestaurants' => $hasDemoRestaurants,
+                'envConfigs' => $this->getCurrentEnv(),
+                'showMultiLanguageMigration' => config('settings.enable_miltilanguage_menus', false) && ! file_exists(storage_path('multilanguagemigrated')),
+            ]);
         } else {
             return redirect()->route('orders.index')->withStatus(__('No Access'));
         }
@@ -373,11 +335,8 @@ class SettingsController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         return redirect()->route('settings.index');
     }
@@ -385,10 +344,9 @@ class SettingsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(int $id)
     {
         //
     }
@@ -396,17 +354,16 @@ class SettingsController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(int $id)
     {
         //
     }
 
     public function setEnvironmentValue(array $values)
     {
-       
+
         $envFile = app()->environmentFilePath();
         $str = "\n";
         $str .= file_get_contents($envFile);
@@ -425,12 +382,12 @@ class SettingsController extends Controller
                 if ((! $keyPosition && $keyPosition != 0) || ! $endOfLinePosition || ! $oldLine) {
                     $str .= "{$envKey}={$envValue}\n";
                 } else {
-                    if($envKey=="DB_PASSWORD"){
+                    if ($envKey == 'DB_PASSWORD') {
                         $str = str_replace($oldLine, "{$envKey}=\"{$envValue}\"", $str);
-                    }else{
+                    } else {
                         $str = str_replace($oldLine, "{$envKey}={$envValue}", $str);
                     }
-                    
+
                 }
             }
         }
@@ -445,12 +402,8 @@ class SettingsController extends Controller
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id): RedirectResponse
     {
         if (config('settings.is_demo') | config('settings.is_demo')) {
             //Demo, don;t allow
@@ -476,24 +429,23 @@ class SettingsController extends Controller
         $settings->mobile_info_title = strip_tags($request->mobile_info_title) ? strip_tags($request->mobile_info_title) : '';
         $settings->mobile_info_subtitle = strip_tags($request->mobile_info_subtitle) ? strip_tags($request->mobile_info_subtitle) : '';
         $settings->delivery = (float) $request->delivery;
-        $settings->order_fields=$request->order_fields;
+        $settings->order_fields = $request->order_fields;
         $settings->update();
-        
 
         fwrite(fopen(__DIR__.'/../../../public/byadmin/front.js', 'w'), str_replace('tagscript', 'script', $request->jsfront));
         fwrite(fopen(__DIR__.'/../../../public/byadmin/back.js', 'w'), str_replace('tagscript', 'script', $request->jsback));
-        fwrite(fopen(__DIR__.'/../../../public/byadmin/front.css', 'w'), str_replace('tagscript', 'script',$request->cssfront) );
-        fwrite(fopen(__DIR__.'/../../../public/byadmin/back.css', 'w'),  str_replace('tagscript', 'script',$request->cssback) );
+        fwrite(fopen(__DIR__.'/../../../public/byadmin/front.css', 'w'), str_replace('tagscript', 'script', $request->cssfront));
+        fwrite(fopen(__DIR__.'/../../../public/byadmin/back.css', 'w'), str_replace('tagscript', 'script', $request->cssback));
 
         fwrite(fopen(__DIR__.'/../../../public/byadmin/frontmenu.js', 'w'), str_replace('tagscript', 'script', $request->jsfrontmenu));
-        fwrite(fopen(__DIR__.'/../../../public/byadmin/frontcss.css', 'w'), str_replace('tagscript', 'script',$request->cssfrontmenu) );
+        fwrite(fopen(__DIR__.'/../../../public/byadmin/frontcss.css', 'w'), str_replace('tagscript', 'script', $request->cssfrontmenu));
 
         if ($request->hasFile('site_logo')) {
             $settings->site_logo = $this->saveImageVersions(
                 $this->imagePath,
                 $request->site_logo,
                 [
-                    ['name'=>'logo', 'type'=>'png'],
+                    ['name' => 'logo', 'type' => 'png'],
                 ]
             );
         }
@@ -503,7 +455,7 @@ class SettingsController extends Controller
                 $this->imagePath,
                 $request->site_logo_dark,
                 [
-                    ['name'=>'site_logo_dark', 'type'=>'png'],
+                    ['name' => 'site_logo_dark', 'type' => 'png'],
                 ]
             );
         }
@@ -513,7 +465,7 @@ class SettingsController extends Controller
                 $this->imagePath,
                 $request->search,
                 [
-                    ['name'=>'cover'],
+                    ['name' => 'cover'],
                 ]
             );
         }
@@ -523,8 +475,8 @@ class SettingsController extends Controller
                 $this->imagePath,
                 $request->restorant_details_image,
                 [
-                    ['name'=>'large', 'w'=>590, 'h'=>400],
-                    ['name'=>'thumbnail', 'w'=>200, 'h'=>200],
+                    ['name' => 'large', 'w' => 590, 'h' => 400],
+                    ['name' => 'thumbnail', 'w' => 200, 'h' => 200],
                 ]
             );
         }
@@ -534,7 +486,7 @@ class SettingsController extends Controller
                 $this->imagePath,
                 $request->restorant_details_cover_image,
                 [
-                    ['name'=>'cover', 'w'=>2000, 'h'=>1000],
+                    ['name' => 'cover', 'w' => 2000, 'h' => 1000],
                 ]
             );
         }
@@ -546,14 +498,14 @@ class SettingsController extends Controller
 
         if ($request->hasFile('wphomehero')) {
             $wpDemo = Image::make($request->wphomehero->getRealPath());
-            $wpDemo->save(public_path().'/social/img/wpordering.svg'); 
+            $wpDemo->save(public_path().'/social/img/wpordering.svg');
         }
 
         if ($request->hasFile('poshomehero')) {
             $wpDemo = Image::make($request->poshomehero->getRealPath());
-            $wpDemo->save(public_path().'/soft/img/poshero.jpeg'); 
+            $wpDemo->save(public_path().'/soft/img/poshero.jpeg');
         }
-        
+
         $images = [
             public_path().'/impactfront/img/flayer.png',
             public_path().'/impactfront/img/menubuilder.jpg',
@@ -567,11 +519,11 @@ class SettingsController extends Controller
         for ($i = 0; $i < 7; $i++) {
             if ($request->hasFile('ftimig'.$i)) {
                 chmod($images[$i], 0777);
-                if($i==0){
+                if ($i == 0) {
                     $imDemo = Image::make($request->all()['ftimig'.$i]->getRealPath())->fit(600, 600);
-                }else{
+                } else {
                     $imDemo = Image::make($request->all()['ftimig'.$i]->getRealPath())->fit(480, 320);
-                }   
+                }
                 $imDemo->save($images[$i]);
             }
         }
@@ -602,31 +554,32 @@ class SettingsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(int $id)
     {
         //
     }
 
-    public function regenerateSitemap(){
-        $exitCodeForMigration=Artisan::call('sitemap:generate', []);
+    public function regenerateSitemap(): RedirectResponse
+    {
+        $exitCodeForMigration = Artisan::call('sitemap:generate', []);
+
         return redirect()->route('settings.index')->withStatus(__('Sitemap Regenerated'));
     }
 
-    public function landing(){
+    public function landing(): View
+    {
 
         $locale = Cookie::get('lang') ? Cookie::get('lang') : config('settings.app_locale');
         if (isset($_GET['lang'])) {
             //3. Change locale to the new local
             app()->setLocale($_GET['lang']);
-            $locale =$_GET['lang'];
+            $locale = $_GET['lang'];
             session(['applocale_change' => $_GET['lang']]);
         }
 
         $this->validateAccess();
-
 
         $availableLanguagesENV = config('settings.front_languages');
         $exploded = explode(',', $availableLanguagesENV);
@@ -635,17 +588,15 @@ class SettingsController extends Controller
             $availableLanguages[$exploded[$i]] = $exploded[$i + 1];
         }
 
-        $sections = ["Features"=>"feature", "Testimonials"=>"testimonial", "Processes"=>"process","FAQs"=>"faq","Blog links"=>"blog"];
+        $sections = ['Features' => 'feature', 'Testimonials' => 'testimonial', 'Processes' => 'process', 'FAQs' => 'faq', 'Blog links' => 'blog'];
 
         $currentEnvLanguage = isset(config('config.env')[2]['fields'][0]['data'][config('app.locale')]) ? config('config.env')[2]['fields'][0]['data'][config('app.locale')] : 'UNKNOWN';
 
-        
         return view('landing.index', [
             'sections' => $sections,
-            'locale'=>$locale,
-            'availableLanguages'=> $availableLanguages,
-            'currentLanguage'=>$currentEnvLanguage
-            ]);
+            'locale' => $locale,
+            'availableLanguages' => $availableLanguages,
+            'currentLanguage' => $currentEnvLanguage,
+        ]);
     }
-    
 }

@@ -10,7 +10,7 @@ class ExpoServiceProvider extends ServiceProvider
     /**
      * Bootstrap the application services.
      */
-    public function boot()
+    public function boot(): void
     {
         $this->app->when(ExpoChannel::class)
             ->needs(GuzzleClient::class)
@@ -31,7 +31,7 @@ class ExpoServiceProvider extends ServiceProvider
     /**
      * Register the application services.
      */
-    public function register()
+    public function register(): void
     {
         $this->mergeConfigFrom(realpath(__DIR__.'/../config/expo.php'), 'expo');
     }
