@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class LocalMenu extends Model
 {
     use HasFactory;
+
     protected $fillable = ['restaurant_id', 'language', 'languageName', 'default'];
 
     protected $table = 'localmenus';

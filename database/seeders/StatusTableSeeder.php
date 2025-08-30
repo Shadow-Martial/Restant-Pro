@@ -9,16 +9,14 @@ class StatusTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         $statuses = ['Just created', 'Accepted by admin', 'Accepted by restaurant', 'Assigned to driver', 'Prepared', 'Picked up', 'Delivered', 'Rejected by admin', 'Rejected by restaurant', 'Updated', 'Closed', 'Rejected by driver', 'Accepted by driver'];
         foreach ($statuses as $key => $status) {
             DB::table('status')->insert([
                 'name' => $status,
-                'alias' =>  str_replace(' ', '_', strtolower($status)),
+                'alias' => str_replace(' ', '_', strtolower($status)),
             ]);
         }
     }

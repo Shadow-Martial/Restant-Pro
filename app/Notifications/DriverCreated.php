@@ -2,9 +2,7 @@
 
 namespace App\Notifications;
 
-use App\Driver;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -13,6 +11,7 @@ class DriverCreated extends Notification
     use Queueable;
 
     protected $password;
+
     protected $user;
 
     /**
@@ -30,9 +29,8 @@ class DriverCreated extends Notification
      * Get the notification's delivery channels.
      *
      * @param  mixed  $notifiable
-     * @return array
      */
-    public function via($notifiable)
+    public function via($notifiable): array
     {
         return ['mail'];
     }
@@ -41,26 +39,24 @@ class DriverCreated extends Notification
      * Get the mail representation of the notification.
      *
      * @param  mixed  $notifiable
-     * @return \Illuminate\Notifications\Messages\MailMessage
      */
-    public function toMail($notifiable)
+    public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-                ->greeting(__('notifications_hello', ['username' => $this->user->name]))
-                ->line(__('notifications_driver_acc_created', ['app_name' => config('app.name')]))
-                ->action(__('notifications_login'), url(config('app.url').'/login'))
-                ->line(__('notifications_username', ['email'=>$this->user->email]))
-                ->line(__('notifications_password', ['password'=>$this->password]))
-                ->line(__('notifications_reset_pass'));
+            ->greeting(__('notifications_hello', ['username' => $this->user->name]))
+            ->line(__('notifications_driver_acc_created', ['app_name' => config('app.name')]))
+            ->action(__('notifications_login'), url(config('app.url').'/login'))
+            ->line(__('notifications_username', ['email' => $this->user->email]))
+            ->line(__('notifications_password', ['password' => $this->password]))
+            ->line(__('notifications_reset_pass'));
     }
 
     /**
      * Get the array representation of the notification.
      *
      * @param  mixed  $notifiable
-     * @return array
      */
-    public function toArray($notifiable)
+    public function toArray($notifiable): array
     {
         return [];
     }

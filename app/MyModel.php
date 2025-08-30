@@ -3,7 +3,6 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MyModel extends Model
 {
@@ -16,12 +15,12 @@ class MyModel extends Model
             if (strpos($imageValue, 'http') !== false) {
                 //Have http
                 if (
-                    strpos($imageValue, '.jpg') !== false || 
-                    strpos($imageValue, '.jpeg') !== false || 
-                    strpos($imageValue, '.png') !== false || 
+                    strpos($imageValue, '.jpg') !== false ||
+                    strpos($imageValue, '.jpeg') !== false ||
+                    strpos($imageValue, '.png') !== false ||
                     strpos($imageValue, 'api.tinify.com') !== false ||
                     strpos($imageValue, 'amazonaws.com') !== false ||
-                    strpos($imageValue, 'googleapis.com') !== false  
+                    strpos($imageValue, 'googleapis.com') !== false
                 ) {
                     //Has extension
                     return $imageValue;

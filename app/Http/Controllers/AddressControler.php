@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Address;
 use App\Restorant;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Spatie\Geocoder\Geocoder;
 
 class AddressControler extends Controller
 {
     protected $autocomepleteEndpoint = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
+
     protected $detailsEndpoint = 'https://maps.googleapis.com/maps/api/place/details/json';
 
     /**
@@ -20,7 +22,7 @@ class AddressControler extends Controller
     public function index()
     {
         if (auth()->user()->hasRole('client')) {
-            $addresses = Address::where(['user_id'=>auth()->user()->id])->where(['active'=>1])->get();
+            $addresses = Address::where(['user_id' => auth()->user()->id])->where(['active' => 1])->get();
 
             return view('addresses.index', ['addresses' => $addresses]);
         } else {
@@ -40,11 +42,8 @@ class AddressControler extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $address = new Address;
         $address->address = strip_tags($request->new_address);
@@ -56,6 +55,7 @@ class AddressControler extends Controller
         $address->floor = $request->floor ?? $request->floor;
         $address->entry = $request->entry ?? $request->entry;
         $address->save();
+
         return response()->json([
             'status' => true,
             'success_url' => redirect()->intended('/cart-checkout')->getTargetUrl(),
@@ -66,7 +66,6 @@ class AddressControler extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Address  $address
      * @return \Illuminate\Http\Response
      */
     public function show(Address $address)
@@ -77,7 +76,6 @@ class AddressControler extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Address  $address
      * @return \Illuminate\Http\Response
      */
     public function edit(Address $address)
@@ -86,12 +84,8 @@ class AddressControler extends Controller
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Address  $address
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Address $address)
+    public function update(Request $request, Address $address): JsonResponse
     {
         $address->lat = $request->lat;
         $address->lng = $request->lng;
@@ -107,11 +101,8 @@ class AddressControler extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param  \App\Address  $address
-     * @return \Illuminate\Http\Response
      */
-    public function destroy(Address $address)
+    public function destroy(Address $address): RedirectResponse
     {
         $address->active = 0;
         $address->save();
@@ -119,7 +110,7 @@ class AddressControler extends Controller
         return redirect()->route('addresses.index')->withStatus(__('Address successfully deactivated.'));
     }
 
-    public function orderAddress(Request $request)
+    public function orderAddress(Request $request): JsonResponse
     {
         $address = Address::where(['id' => $request->addressID])->get()->first();
 
@@ -134,16 +125,16 @@ class AddressControler extends Controller
         ]);
     }
 
-    public function newAddressAutocomplete()
+    public function newAddressAutocomplete(): JsonResponse
     {
         if (! isset($_GET['term'])) {
-            return response()->json(['results'=>[]]);
+            return response()->json(['results' => []]);
         }
 
         $term = $_GET['term'];
 
         if (strlen($term) < 2) {
-            return response()->json(['results'=>[]]);
+            return response()->json(['results' => []]);
         }
 
         $client = new \GuzzleHttp\Client();
@@ -157,7 +148,7 @@ class AddressControler extends Controller
         $response = $client->request('GET', $this->autocomepleteEndpoint, $payload);
 
         if ($response->getStatusCode() !== 200) {
-            return response()->json(['results'=>[]]);
+            return response()->json(['results' => []]);
         }
 
         $responseDecoded = json_decode($response->getBody());
@@ -169,12 +160,12 @@ class AddressControler extends Controller
             }
         }
 
-        $data = ['results'=>$matches];
+        $data = ['results' => $matches];
 
         return response()->json($data);
     }
 
-    public function newAdressPlaceDetails(Request $request)
+    public function newAdressPlaceDetails(Request $request): JsonResponse
     {
         $itemToReturn = null;
         $client = new \GuzzleHttp\Client();
@@ -220,7 +211,7 @@ class AddressControler extends Controller
         }
     }
 
-    public function AddressInDeliveryArea(Request $request)
+    public function AddressInDeliveryArea(Request $request): JsonResponse
     {
         $restaurant_id = $request->restaurant_id;
         $ids = $request->address_ids;

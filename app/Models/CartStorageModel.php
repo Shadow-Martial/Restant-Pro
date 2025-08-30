@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
+use App\Traits\HasConfig;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\HasConfig;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CartStorageModel extends Model
 {
-    use HasFactory;
     use HasConfig;
+    use HasFactory;
 
-    protected $modelName="App\Models\CartStorageModel";
+    protected $modelName = \App\Models\CartStorageModel::class;
 
     protected $table = 'cart_storage';
 
@@ -21,15 +23,15 @@ class CartStorageModel extends Model
      * @var array
      */
     protected $fillable = [
-        'id', 'cart_data','vendor_id','user_id','type','receipt_number','kds_finished',
+        'id', 'cart_data', 'vendor_id', 'user_id', 'type', 'receipt_number', 'kds_finished',
     ];
 
-    public function vendor()
+    public function vendor(): BelongsTo
     {
-        return $this->belongsTo(\App\Restorant::class,'id','vendor_id');
+        return $this->belongsTo(\App\Restorant::class, 'id', 'vendor_id');
     }
 
-    public function user()
+    public function user(): HasOne
     {
         return $this->hasOne(\App\User::class, 'id', 'user_id');
     }
@@ -44,17 +46,18 @@ class CartStorageModel extends Model
         return unserialize($value);
     }
 
-    public function updateItemAttribute($value,$itemId,$attributeName,$attributeValue){
+    public function updateItemAttribute($value, $itemId, $attributeName, $attributeValue)
+    {
         foreach ($value as $key => $item) {
-            if($key==$itemId){
-                $value[$key][$attributeName]= $attributeValue;
+            if ($key == $itemId) {
+                $value[$key][$attributeName] = $attributeValue;
             }
         }
         $this->attributes['cart_data'] = serialize($value);
     }
 
-    public function updateAttribute($attributeName,$attributeValue){
+    public function updateAttribute($attributeName, $attributeValue)
+    {
         $this->attributes[$attributeName] = $attributeValue;
     }
-    
 }

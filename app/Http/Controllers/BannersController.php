@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Banners;
 use App\Pages;
 use App\Restorant;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class BannersController extends Controller
 {
@@ -44,44 +46,40 @@ class BannersController extends Controller
     private function getFields()
     {
         return [
-            ['class'=>'col-md-4', 'ftype'=>'input', 'name'=>'Name', 'id'=>'name', 'placeholder'=>'Enter table name or internal id, ex Table 8', 'required'=>true],
-            ['class'=>'col-md-4', 'ftype'=>'input', 'type'=>'number', 'name'=>'Vendor/Page', 'id'=>'size', 'placeholder'=>'Enter table person size, ex 4', 'required'=>true],
-            ['class'=>'col-md-4', 'ftype'=>'select', 'name'=>'Active from', 'id'=>'restoarea_id', 'placeholder'=>'Selec rest area id', 'data'=>'', 'required'=>true],
-            ['class'=>'col-md-4', 'ftype'=>'select', 'name'=>'Active to', 'id'=>'restoarea_id', 'placeholder'=>'Selec rest area id', 'data'=>'', 'required'=>true],
+            ['class' => 'col-md-4', 'ftype' => 'input', 'name' => 'Name', 'id' => 'name', 'placeholder' => 'Enter table name or internal id, ex Table 8', 'required' => true],
+            ['class' => 'col-md-4', 'ftype' => 'input', 'type' => 'number', 'name' => 'Vendor/Page', 'id' => 'size', 'placeholder' => 'Enter table person size, ex 4', 'required' => true],
+            ['class' => 'col-md-4', 'ftype' => 'select', 'name' => 'Active from', 'id' => 'restoarea_id', 'placeholder' => 'Selec rest area id', 'data' => '', 'required' => true],
+            ['class' => 'col-md-4', 'ftype' => 'select', 'name' => 'Active to', 'id' => 'restoarea_id', 'placeholder' => 'Selec rest area id', 'data' => '', 'required' => true],
         ];
     }
 
     /**
      * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function index(Banners $banners)
+    public function index(Banners $banners): View
     {
         $this->adminOnly();
 
         return view($this->view_path.'index', ['setup' => [
-            'title'=>__('crud.item_managment', ['item'=>__($this->titlePlural)]),
-            'action_link'=>route($this->webroute_path.'create'),
-            'action_name'=>__('crud.add_new_item', ['item'=>__($this->title)]),
-            'items'=> $banners->paginate(config('settings.paginate')),
-            'item_names'=>$this->titlePlural,
-            'webroute_path'=>$this->webroute_path,
-            'fields'=>$this->getFields(),
-            'parameter_name'=>$this->parameter_name,
+            'title' => __('crud.item_managment', ['item' => __($this->titlePlural)]),
+            'action_link' => route($this->webroute_path.'create'),
+            'action_name' => __('crud.add_new_item', ['item' => __($this->title)]),
+            'items' => $banners->paginate(config('settings.paginate')),
+            'item_names' => $this->titlePlural,
+            'webroute_path' => $this->webroute_path,
+            'fields' => $this->getFields(),
+            'parameter_name' => $this->parameter_name,
         ]]);
     }
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(): View
     {
         $this->adminOnly();
 
-        $restaurants = Restorant::where(['active'=>1])->get();
+        $restaurants = Restorant::where(['active' => 1])->get();
         $restaurantsData = [];
         foreach ($restaurants as $key => $restaurant) {
             $restaurantsData[$restaurant->id] = $restaurant->name;
@@ -98,11 +96,8 @@ class BannersController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $this->adminOnly();
 
@@ -120,20 +115,19 @@ class BannersController extends Controller
                 $this->imagePath,
                 $request->banner_image,
                 [
-                    ['name'=>'banner', 'w'=>401, 'h'=>170],
+                    ['name' => 'banner', 'w' => 401, 'h' => 170],
                 ]
             );
         }
 
         $item->save();
 
-        return redirect()->route($this->webroute_path.'index')->withStatus(__('crud.item_has_been_added', ['item'=>__($this->title)]));
+        return redirect()->route($this->webroute_path.'index')->withStatus(__('crud.item_has_been_added', ['item' => __($this->title)]));
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Banners  $banners
      * @return \Illuminate\Http\Response
      */
     public function show(Banners $banners)
@@ -145,13 +139,12 @@ class BannersController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  \App\Banners  $banners
-     * @return \Illuminate\Http\Response
      */
-    public function edit(Banners $banner)
+    public function edit(Banners $banner): View
     {
         $this->adminOnly();
 
-        $restaurants = Restorant::where(['active'=>1])->get();
+        $restaurants = Restorant::where(['active' => 1])->get();
         $restaurantsData = [];
         foreach ($restaurants as $key => $restaurant) {
             $restaurantsData[$restaurant->id] = $restaurant->name;
@@ -169,11 +162,9 @@ class BannersController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  \App\Banners  $banners
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): RedirectResponse
     {
         $this->adminOnly();
 
@@ -190,29 +181,28 @@ class BannersController extends Controller
                 $this->imagePath,
                 $request->banner_image,
                 [
-                    ['name'=>'banner', 'w'=>401, 'h'=>170],
+                    ['name' => 'banner', 'w' => 401, 'h' => 170],
                 ]
             );
         }
 
         $item->update();
 
-        return redirect()->route($this->webroute_path.'index')->withStatus(__('crud.item_has_been_updated', ['item'=>__($this->title)]));
+        return redirect()->route($this->webroute_path.'index')->withStatus(__('crud.item_has_been_updated', ['item' => __($this->title)]));
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Banners  $banners
-     * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($id): RedirectResponse
     {
         $this->adminOnly();
 
         $item = $this->provider::findOrFail($id);
         $item->delete();
-        
-        return redirect()->route($this->webroute_path.'index')->withStatus(__('crud.item_has_been_removed', ['item'=>__($this->title)]));
+
+        return redirect()->route($this->webroute_path.'index')->withStatus(__('crud.item_has_been_removed', ['item' => __($this->title)]));
     }
 }

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Process;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ProcessController extends Controller
 {
@@ -18,26 +20,23 @@ class ProcessController extends Controller
 
     private function getFields()
     {
-        $elements=[
-            ['ftype'=>'input', 'name'=>'Title', 'id'=>'title', 'placeholder'=>__('Enter title'), 'required'=>true],
-            ['ftype'=>'input', 'name'=>'Description', 'id'=>'description', 'placeholder'=>__('Enter description'), 'required'=>true],
-            ['ftype'=>'input', 'name'=>'Link Name', 'id'=>'link_name', 'placeholder'=>__('Enter link name'), 'required'=>false],
-            ['ftype'=>'input', 'name'=>'Link ', 'id'=>'link', 'placeholder'=>__('Enter link URL'), 'required'=>false],
+        $elements = [
+            ['ftype' => 'input', 'name' => 'Title', 'id' => 'title', 'placeholder' => __('Enter title'), 'required' => true],
+            ['ftype' => 'input', 'name' => 'Description', 'id' => 'description', 'placeholder' => __('Enter description'), 'required' => true],
+            ['ftype' => 'input', 'name' => 'Link Name', 'id' => 'link_name', 'placeholder' => __('Enter link name'), 'required' => false],
+            ['ftype' => 'input', 'name' => 'Link ', 'id' => 'link', 'placeholder' => __('Enter link URL'), 'required' => false],
         ];
-  
-            array_push($elements, ['ftype'=>'input', 'name'=>__('Subtitle'), 'id'=>'subtitle', 'required'=>true, 'placeholder'=>__('Enter subtitle')]);
-            array_push($elements, ['ftype'=>'image', 'name'=>__('Feature image'), 'id'=>'image']);
-        
+
+        array_push($elements, ['ftype' => 'input', 'name' => __('Subtitle'), 'id' => 'subtitle', 'required' => true, 'placeholder' => __('Enter subtitle')]);
+        array_push($elements, ['ftype' => 'image', 'name' => __('Feature image'), 'id' => 'image']);
 
         return $elements;
     }
 
     /**
      * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(): View
     {
         $this->validateAccess();
 
@@ -57,10 +56,8 @@ class ProcessController extends Controller
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(): View
     {
         $this->validateAccess();
 
@@ -76,16 +73,13 @@ class ProcessController extends Controller
                 [__('New'), null],
             ],
         ],
-        'fields'=>$this->getFields(), ]);
+            'fields' => $this->getFields(), ]);
     }
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $this->validateAccess();
         //Validate first
@@ -104,21 +98,18 @@ class ProcessController extends Controller
             'link_name' => $request->link_name,
         ]);
 
+        $process->subtitle = $request->has('subtitle') ? $request->subtitle : '';
 
-            $process->subtitle=$request->has('subtitle')?$request->subtitle:"";
-            
-            if ($request->hasFile('image')) {
-                $process->image = $this->saveImageVersions(
-                    $this->imagePath,
-                    $request->image,
-                    [
-                        ['name'=>'large'],
-                    ]
-                );
-               
-            }
-          
+        if ($request->hasFile('image')) {
+            $process->image = $this->saveImageVersions(
+                $this->imagePath,
+                $request->image,
+                [
+                    ['name' => 'large'],
+                ]
+            );
 
+        }
 
         $process->save();
 
@@ -128,7 +119,6 @@ class ProcessController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Process  $process
      * @return \Illuminate\Http\Response
      */
     public function show(Process $process)
@@ -138,11 +128,8 @@ class ProcessController extends Controller
 
     /**
      * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Process  $process
-     * @return \Illuminate\Http\Response
      */
-    public function edit(Process $process)
+    public function edit(Process $process): View
     {
         $this->validateAccess();
         $fields = $this->getFields();
@@ -151,9 +138,9 @@ class ProcessController extends Controller
         $fields[2]['value'] = $process->link;
         $fields[3]['value'] = $process->link_name;
 
-        if(config('app.ispc')){
+        if (config('app.ispc')) {
             $fields[4]['value'] = $process->subtitle;
-            $fields[5]['value'] =  $process->image_link;
+            $fields[5]['value'] = $process->image_link;
         }
 
         //dd($option);
@@ -170,17 +157,13 @@ class ProcessController extends Controller
                 [$process->id, null],
             ],
         ],
-        'fields'=>$fields, ]);
+            'fields' => $fields, ]);
     }
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Process  $process
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Process $process)
+    public function update(Request $request, Process $process): RedirectResponse
     {
         $this->validateAccess();
 
@@ -189,18 +172,18 @@ class ProcessController extends Controller
         $process->link = $request->link;
         $process->link_name = $request->link_name;
 
-        $process->subtitle=$request->has('subtitle')?$request->subtitle:"";
-            
-            if ($request->hasFile('image')) {
-                $process->image = $this->saveImageVersions(
-                    $this->imagePath,
-                    $request->image,
-                    [
-                        ['name'=>'large'],
-                    ]
-                );
-               
-            }
+        $process->subtitle = $request->has('subtitle') ? $request->subtitle : '';
+
+        if ($request->hasFile('image')) {
+            $process->image = $this->saveImageVersions(
+                $this->imagePath,
+                $request->image,
+                [
+                    ['name' => 'large'],
+                ]
+            );
+
+        }
 
         $process->update();
 
@@ -209,11 +192,8 @@ class ProcessController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Process  $process
-     * @return \Illuminate\Http\Response
      */
-    public function destroy(Process $process)
+    public function destroy(Process $process): RedirectResponse
     {
         $this->validateAccess();
 

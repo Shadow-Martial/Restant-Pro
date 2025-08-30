@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Order;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -17,7 +16,7 @@ class ClientsExport implements FromArray, WithHeadings
             'client_id',
             'client_email',
             'client_phone',
-            'created'
+            'created',
         ];
     }
 

@@ -16,7 +16,7 @@ Route::prefix('floorplan')->group(function() {
 });
 
 Route::group([
-    'middleware' => 'web',
+    'middleware' =>[ 'web','impersonate'],
     'namespace' => 'Modules\Floorplan\Http\Controllers'
 ], function () {
     Route::prefix('floorplan')->group(function() {

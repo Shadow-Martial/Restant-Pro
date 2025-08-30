@@ -3,8 +3,6 @@
 namespace App\Listeners;
 
 use App\Restorant;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 
 class SetRestaurantIdInSession
 {
@@ -20,18 +18,15 @@ class SetRestaurantIdInSession
 
     /**
      * Handle the event.
-     *
-     * @param  object  $event
-     * @return void
      */
-    public function handle($event)
+    public function handle(object $event): void
     {
-        $vendor=Restorant::where('user_id', $event->user->id)->first();
-        if($vendor){
+        $vendor = Restorant::where('user_id', $event->user->id)->first();
+        if ($vendor) {
             session(['restaurant_id' => $vendor->id]);
             session(['restaurant_currency' => $vendor->currency]);
             session(['restaurant_convertion' => $vendor->do_covertion]);
         }
-        
+
     }
 }

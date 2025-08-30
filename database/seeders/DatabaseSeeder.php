@@ -8,21 +8,19 @@ class DatabaseSeeder extends Seeder
 {
     /**
      * Seed the application's database.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         $this->call(UsersTableSeeder::class);
         $this->call(RolesTableSeeder::class);
-        
-        if(!config('settings.makePureSaaS',false)){
+
+        if (! config('settings.makePureSaaS', false)) {
             $this->call(StatusTableSeeder::class);
         }
-       
+
         $this->call(PagesSeeder::class);
 
-        if (config('settings.demo_data')&&!config('settings.makePureSaaS',false)) {
+        if (config('settings.demo_data') && ! config('settings.makePureSaaS', false)) {
             //The demo seader
             $this->call(DemoSeeder::class);
         }

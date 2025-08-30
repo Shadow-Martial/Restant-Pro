@@ -40,38 +40,30 @@ class RestorantsTableSeeder extends Seeder
 
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
 
-
         //Restorant owner
-        $demoOwnerId=DB::table('users')->insertGetId([
+        $demoOwnerId = DB::table('users')->insertGetId([
             'name' => 'Demo Owner',
-            'email' =>  'owner@example.com',
+            'email' => 'owner@example.com',
             'password' => Hash::make('secret'),
             'api_token' => Str::random(80),
             'email_verified_at' => now(),
-            'phone' =>  '',
+            'phone' => '',
             'created_at' => now(),
             'updated_at' => now(),
-            'plan_id'=> config('app.isqrsaas') ? ( config('settings.is_whatsapp_ordering_mode')?2:3) : null,
+            'plan_id' => config('app.isqrsaas') ? (config('settings.is_whatsapp_ordering_mode') ? 2 : 3) : null,
         ]);
 
         //Assign owner role
         DB::table('model_has_roles')->insert([
-            'role_id' =>2,
-            'model_type' =>  \App\User::class,
-            'model_id'=> $demoOwnerId,
+            'role_id' => 2,
+            'model_type' => \App\User::class,
+            'model_id' => $demoOwnerId,
         ]);
 
-
-       
-
-
-        
         //Bronx, Manhattn, Queens, Brooklyn
 
         //Brooklyn
@@ -96,74 +88,71 @@ class RestorantsTableSeeder extends Seeder
         $reg = json_decode(File::get(base_path('database/seeders/json/regular_res.json')), true);
         $agris = json_decode(File::get(base_path('database/seeders/json/agris_res.json')), true);
 
-
         $restorants = [
-            ['city_id'=>2, 'latlng'=>$BrooklynLatLng[0], 'area'=>$BrooklynArea, 'items'=>$pizza, 'name'=>'Leuka Pizza', 'description'=>'italian, pasta, pizza', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/9d180742-9fb3-4b46-8563-8c24c9004fd3'],
-            ['city_id'=>2, 'latlng'=>$BrooklynLatLng[1], 'area'=>$BrooklynArea, 'items'=>$burg, 'name'=>'Oasis Burgers', 'description'=>'burgers, drinks, best chicken', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/c8d27bcc-54da-4c18-b8e6-f1414c71612c'],
-            ['city_id'=>2, 'latlng'=>$BrooklynLatLng[2], 'area'=>$BrooklynArea, 'items'=>$mex, 'name'=>'Brooklyn Taco', 'description'=>'yummy taco, wraps, fast food', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/3e571ad8-e161-4245-91d9-88b47d6d6770'],
-            ['city_id'=>2, 'latlng'=>$BrooklynLatLng[3], 'area'=>$BrooklynArea, 'items'=>$reg, 'name'=>'The Brooklyn tree', 'description'=>'drinks, lunch, bbq', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/6fa5233f-00f3-4f52-950c-5a1705583dfc'],
+            ['city_id' => 2, 'latlng' => $BrooklynLatLng[0], 'area' => $BrooklynArea, 'items' => $pizza, 'name' => 'Leuka Pizza', 'description' => 'italian, pasta, pizza', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/9d180742-9fb3-4b46-8563-8c24c9004fd3'],
+            ['city_id' => 2, 'latlng' => $BrooklynLatLng[1], 'area' => $BrooklynArea, 'items' => $burg, 'name' => 'Oasis Burgers', 'description' => 'burgers, drinks, best chicken', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/c8d27bcc-54da-4c18-b8e6-f1414c71612c'],
+            ['city_id' => 2, 'latlng' => $BrooklynLatLng[2], 'area' => $BrooklynArea, 'items' => $mex, 'name' => 'Brooklyn Taco', 'description' => 'yummy taco, wraps, fast food', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/3e571ad8-e161-4245-91d9-88b47d6d6770'],
+            ['city_id' => 2, 'latlng' => $BrooklynLatLng[3], 'area' => $BrooklynArea, 'items' => $reg, 'name' => 'The Brooklyn tree', 'description' => 'drinks, lunch, bbq', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/6fa5233f-00f3-4f52-950c-5a1705583dfc'],
         ];
 
-        
-        
         $this->shuffle_assoc($pizza);
         $this->shuffle_assoc($mex);
         $this->shuffle_assoc($burg);
         $this->shuffle_assoc($reg);
 
-        array_push($restorants, ['city_id'=>3, 'latlng'=>$QueensLatLng[0], 'area'=>$QueensArea, 'items'=>$pizza, 'name'=>'Awang Italian Restorant', 'description'=>'italian, pasta, pizza', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/4a2067cb-f39c-4b26-83ef-9097512d3328']);
-        array_push($restorants, ['city_id'=>3, 'latlng'=>$QueensLatLng[1], 'area'=>$QueensArea, 'items'=>$mex, 'name'=>'Wendy Taco', 'description'=>'yummy taco, wraps, fast food', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/6f9e8892-4a28-4c99-ab24-57179a1424b9']);
-        array_push($restorants, ['city_id'=>3, 'latlng'=>$QueensLatLng[2], 'area'=>$QueensArea, 'items'=>$burg, 'name'=>'Burger 2Go', 'description'=>'burgers, drinks, best chicken', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/80a49037-07e9-4e28-b23e-66fd641c1c77']);
-        array_push($restorants, ['city_id'=>3, 'latlng'=>$QueensLatLng[3], 'area'=>$QueensArea, 'items'=>$reg, 'name'=>'Titan Foods', 'description'=>'drinks, lunch, bbq', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/56e90ea7-5321-4cfd-8b2c-918ccd3c3f77']);
-
-        $this->shuffle_assoc($pizza);
-        $this->shuffle_assoc($mex);
-        $this->shuffle_assoc($burg);
-        $this->shuffle_assoc($reg);
-
-        array_push($restorants, ['city_id'=>4, 'latlng'=>$ManhattnLatLng[0], 'area'=>$ManhattnArea, 'items'=>$pizza, 'name'=>'Pizza Manhattn', 'description'=>'italian, international, pasta', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/0102bebe-b6c4-46b0-9195-ee06bca71a37']);
-        array_push($restorants, ['city_id'=>4, 'latlng'=>$ManhattnLatLng[1], 'area'=>$ManhattnArea, 'items'=>$mex, 'name'=>'il Buco', 'description'=>'tacos, wraps, Quesadilla', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/4384df9b-9656-49d1-bfc1-9b5e85e1193a']);
-        array_push($restorants, ['city_id'=>4, 'latlng'=>$ManhattnLatLng[2], 'area'=>$ManhattnArea, 'items'=>$burg, 'name'=>'Vandal Burgers', 'description'=>'drinks, beef burgers', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/5757558a-94d7-4ba9-b39c-2e258701f051']);
-        array_push($restorants, ['city_id'=>4, 'latlng'=>$ManhattnLatLng[3], 'area'=>$ManhattnArea, 'items'=>$reg, 'name'=>'Malibu Diner', 'description'=>'drinks, lunch, bbq', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/a2b5b612-9fec-4e28-bb7d-88a06d97bda6']);
+        array_push($restorants, ['city_id' => 3, 'latlng' => $QueensLatLng[0], 'area' => $QueensArea, 'items' => $pizza, 'name' => 'Awang Italian Restorant', 'description' => 'italian, pasta, pizza', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/4a2067cb-f39c-4b26-83ef-9097512d3328']);
+        array_push($restorants, ['city_id' => 3, 'latlng' => $QueensLatLng[1], 'area' => $QueensArea, 'items' => $mex, 'name' => 'Wendy Taco', 'description' => 'yummy taco, wraps, fast food', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/6f9e8892-4a28-4c99-ab24-57179a1424b9']);
+        array_push($restorants, ['city_id' => 3, 'latlng' => $QueensLatLng[2], 'area' => $QueensArea, 'items' => $burg, 'name' => 'Burger 2Go', 'description' => 'burgers, drinks, best chicken', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/80a49037-07e9-4e28-b23e-66fd641c1c77']);
+        array_push($restorants, ['city_id' => 3, 'latlng' => $QueensLatLng[3], 'area' => $QueensArea, 'items' => $reg, 'name' => 'Titan Foods', 'description' => 'drinks, lunch, bbq', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/56e90ea7-5321-4cfd-8b2c-918ccd3c3f77']);
 
         $this->shuffle_assoc($pizza);
         $this->shuffle_assoc($mex);
         $this->shuffle_assoc($burg);
         $this->shuffle_assoc($reg);
 
-        array_push($restorants, ['city_id'=>1, 'latlng'=>$BronxLatLng[0], 'area'=>$BronxArea, 'items'=>$pizza, 'name'=>'Pizza Relham', 'description'=>'italian, international, pasta', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/0102bebe-b6c4-46b0-9195-ee06bca71a37']);
-        array_push($restorants, ['city_id'=>1, 'latlng'=>$BronxLatLng[1], 'area'=>$BronxArea, 'items'=>$mex, 'name'=>'NorWood Burito', 'description'=>'tacos, wraps, Quesadilla', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/4384df9b-9656-49d1-bfc1-9b5e85e1193a']);
-        array_push($restorants, ['city_id'=>1, 'latlng'=>$BronxLatLng[2], 'area'=>$BronxArea, 'items'=>$burg, 'name'=>'Morris Park Burger', 'description'=>'drinks, beef burgers', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/5757558a-94d7-4ba9-b39c-2e258701f051']);
-        array_push($restorants, ['city_id'=>1, 'latlng'=>$BronxLatLng[3], 'area'=>$BronxArea, 'items'=>$reg, 'name'=>'Bronx VanNest Restorant', 'description'=>'drinks, lunch, bbq', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/a2b5b612-9fec-4e28-bb7d-88a06d97bda6']);
+        array_push($restorants, ['city_id' => 4, 'latlng' => $ManhattnLatLng[0], 'area' => $ManhattnArea, 'items' => $pizza, 'name' => 'Pizza Manhattn', 'description' => 'italian, international, pasta', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/0102bebe-b6c4-46b0-9195-ee06bca71a37']);
+        array_push($restorants, ['city_id' => 4, 'latlng' => $ManhattnLatLng[1], 'area' => $ManhattnArea, 'items' => $mex, 'name' => 'il Buco', 'description' => 'tacos, wraps, Quesadilla', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/4384df9b-9656-49d1-bfc1-9b5e85e1193a']);
+        array_push($restorants, ['city_id' => 4, 'latlng' => $ManhattnLatLng[2], 'area' => $ManhattnArea, 'items' => $burg, 'name' => 'Vandal Burgers', 'description' => 'drinks, beef burgers', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/5757558a-94d7-4ba9-b39c-2e258701f051']);
+        array_push($restorants, ['city_id' => 4, 'latlng' => $ManhattnLatLng[3], 'area' => $ManhattnArea, 'items' => $reg, 'name' => 'Malibu Diner', 'description' => 'drinks, lunch, bbq', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/a2b5b612-9fec-4e28-bb7d-88a06d97bda6']);
+
+        $this->shuffle_assoc($pizza);
+        $this->shuffle_assoc($mex);
+        $this->shuffle_assoc($burg);
+        $this->shuffle_assoc($reg);
+
+        array_push($restorants, ['city_id' => 1, 'latlng' => $BronxLatLng[0], 'area' => $BronxArea, 'items' => $pizza, 'name' => 'Pizza Relham', 'description' => 'italian, international, pasta', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/0102bebe-b6c4-46b0-9195-ee06bca71a37']);
+        array_push($restorants, ['city_id' => 1, 'latlng' => $BronxLatLng[1], 'area' => $BronxArea, 'items' => $mex, 'name' => 'NorWood Burito', 'description' => 'tacos, wraps, Quesadilla', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/4384df9b-9656-49d1-bfc1-9b5e85e1193a']);
+        array_push($restorants, ['city_id' => 1, 'latlng' => $BronxLatLng[2], 'area' => $BronxArea, 'items' => $burg, 'name' => 'Morris Park Burger', 'description' => 'drinks, beef burgers', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/5757558a-94d7-4ba9-b39c-2e258701f051']);
+        array_push($restorants, ['city_id' => 1, 'latlng' => $BronxLatLng[3], 'area' => $BronxArea, 'items' => $reg, 'name' => 'Bronx VanNest Restorant', 'description' => 'drinks, lunch, bbq', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/a2b5b612-9fec-4e28-bb7d-88a06d97bda6']);
 
         //In agris only add 2 vendors
         if (config('settings.is_agris_mode')) {
             //Agris 2 vendors
             $restorants = [
-                ['city_id'=>1, 'latlng'=>['41.503496587937285','22.11365504675822'], 'area'=>$BrooklynArea, 'items'=>$agris, 'name'=>'My Farm', 'description'=>'Fresh seasonal fruits and vegetables', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/9d180742-9fb3-4b46-8563-8c24c9004fd3'],
+                ['city_id' => 1, 'latlng' => ['41.503496587937285', '22.11365504675822'], 'area' => $BrooklynArea, 'items' => $agris, 'name' => 'My Farm', 'description' => 'Fresh seasonal fruits and vegetables', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/9d180742-9fb3-4b46-8563-8c24c9004fd3'],
             ];
             $this->shuffle_assoc($agris);
-            array_push($restorants, ['city_id'=>1, 'latlng'=>$BronxLatLng[0], 'area'=>$BronxArea, 'items'=>$agris, 'name'=>'Organic fruits inc', 'description'=>'Organic fruits, vegetable and honey', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/a2b5b612-9fec-4e28-bb7d-88a06d97bda6']);
+            array_push($restorants, ['city_id' => 1, 'latlng' => $BronxLatLng[0], 'area' => $BronxArea, 'items' => $agris, 'name' => 'Organic fruits inc', 'description' => 'Organic fruits, vegetable and honey', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/a2b5b612-9fec-4e28-bb7d-88a06d97bda6']);
             $this->shuffle_assoc($agris);
-            array_push($restorants, ['city_id'=>1, 'latlng'=>$BronxLatLng[0], 'area'=>$BronxArea, 'items'=>$agris, 'name'=>'Freshco', 'description'=>'Fresh seasonal fruits', 'image'=>'https://foodtiger.mobidonia.com/uploads/restorants/a2b5b612-9fec-4e28-bb7d-88a06d97bda6']);
+            array_push($restorants, ['city_id' => 1, 'latlng' => $BronxLatLng[0], 'area' => $BronxArea, 'items' => $agris, 'name' => 'Freshco', 'description' => 'Fresh seasonal fruits', 'image' => 'https://foodtiger.mobidonia.com/uploads/restorants/a2b5b612-9fec-4e28-bb7d-88a06d97bda6']);
         }
 
-         //In social drive only add 2 vendors
-         if (config('app.issd')||config('app.isdrive')) {
+        //In social drive only add 2 vendors
+        if (config('app.issd') || config('app.isdrive')) {
             //SD 3 vendors
             $restorants = [
-                ['city_id'=>1, 'latlngs'=>$BrooklynLatLng, 'latlng'=>$BrooklynLatLng[0], 'area'=>$BrooklynArea, 'items'=>[], 'name'=>'Brooklyn Taxi', 'description'=>'Brooklyn Taxi and Limo', 'image'=>'https://i.imgur.com/R7Oe2ABm.jpg'],
-                ['city_id'=>1, 'latlngs'=>$QueensLatLng, 'latlng'=>$QueensLatLng[0], 'area'=>$QueensArea, 'items'=>[], 'name'=>'Queens cabs', 'description'=>'Best taxi in Queens', 'image'=>'https://i.imgur.com/R7Oe2ABm.jpg'],
-                ['city_id'=>1, 'latlngs'=>$ManhattnLatLng, 'latlng'=>$ManhattnLatLng[0], 'area'=>$ManhattnArea, 'items'=>[], 'name'=>'ManhattnGo', 'description'=>'Best taxi in Manhattn', 'image'=>'https://i.imgur.com/R7Oe2ABm.jpg']
+                ['city_id' => 1, 'latlngs' => $BrooklynLatLng, 'latlng' => $BrooklynLatLng[0], 'area' => $BrooklynArea, 'items' => [], 'name' => 'Brooklyn Taxi', 'description' => 'Brooklyn Taxi and Limo', 'image' => 'https://i.imgur.com/R7Oe2ABm.jpg'],
+                ['city_id' => 1, 'latlngs' => $QueensLatLng, 'latlng' => $QueensLatLng[0], 'area' => $QueensArea, 'items' => [], 'name' => 'Queens cabs', 'description' => 'Best taxi in Queens', 'image' => 'https://i.imgur.com/R7Oe2ABm.jpg'],
+                ['city_id' => 1, 'latlngs' => $ManhattnLatLng, 'latlng' => $ManhattnLatLng[0], 'area' => $ManhattnArea, 'items' => [], 'name' => 'ManhattnGo', 'description' => 'Best taxi in Manhattn', 'image' => 'https://i.imgur.com/R7Oe2ABm.jpg'],
             ];
         }
 
         if (config('app.isdrive')) {
             //Drive 0 inserted vendors
-            $lastFakeInsertedVendor=1;
+            $lastFakeInsertedVendor = 1;
             foreach ($restorants as $key => $restorant) {
-                    $this->demoDriversInsert($restorant,$lastFakeInsertedVendor,false); 
-                    $lastFakeInsertedVendor++;
+                $this->demoDriversInsert($restorant, $lastFakeInsertedVendor, false);
+                $lastFakeInsertedVendor++;
             }
             $restorants = [];
         }
@@ -171,83 +160,81 @@ class RestorantsTableSeeder extends Seeder
         $id = 1;
         $catId = 1;
         foreach ($restorants as $key => $restorant) {
-            $lastRestaurantId=DB::table('companies')->insertGetId([
-                'name'=>$restorant['name'],
-                'logo'=>$restorant['image'],
-                'city_id'=>$restorant['city_id'],
-                'subdomain'=>$this->createSubdomainFromName($restorant['name']), // strtolower(preg_replace('/[^A-Za-z0-9]/', '', $restorant['name'])),
-                'user_id'=>2,
+            $lastRestaurantId = DB::table('companies')->insertGetId([
+                'name' => $restorant['name'],
+                'logo' => $restorant['image'],
+                'city_id' => $restorant['city_id'],
+                'subdomain' => $this->createSubdomainFromName($restorant['name']), // strtolower(preg_replace('/[^A-Za-z0-9]/', '', $restorant['name'])),
+                'user_id' => 2,
                 'created_at' => now(),
                 'updated_at' => now(),
                 'lat' => $restorant['latlng'][0],
                 'lng' => $restorant['latlng'][1],
-                'radius'=>$restorant['area'],
+                'radius' => $restorant['area'],
                 'address' => '6 Yukon Drive Raeford, NC 28376',
                 'phone' => '(530) 625-9694',
                 'whatsapp_phone' => '+38971605048',
-                'description'=>$restorant['description'],
-                'minimum'=>10,
-                'payment_info'=>"We accept Cash On Deliver and direct payments. DEMO PAYMENT",
-                'mollie_payment_key'=>"test_W7vgVS4bUTVarzBm39wjUk7SRV3Aek"
+                'description' => $restorant['description'],
+                'minimum' => 10,
+                'payment_info' => 'We accept Cash On Deliver and direct payments. DEMO PAYMENT',
+                'mollie_payment_key' => 'test_W7vgVS4bUTVarzBm39wjUk7SRV3Aek',
             ]);
 
-            if(config('app.issd')){
+            if (config('app.issd')) {
                 //SDrive  vendors
-                $this->demoDriversInsert($restorant,$lastRestaurantId,true);
+                $this->demoDriversInsert($restorant, $lastRestaurantId, true);
             }
-            
-            
 
-            if(!config('app.issd')){
+            if (! config('app.issd')) {
                 //Insert delivery area
-                $demoDeliveryArea1=DB::table('simple_delivery_areas')->insertGetId([
+                $demoDeliveryArea1 = DB::table('simple_delivery_areas')->insertGetId([
                     'name' => 'Nearby',
-                    'cost' =>  10,
-                    'restaurant_id'=>$lastRestaurantId
+                    'cost' => 10,
+                    'restaurant_id' => $lastRestaurantId,
                 ]);
 
-                $demoDeliveryArea1=DB::table('simple_delivery_areas')->insertGetId([
+                $demoDeliveryArea1 = DB::table('simple_delivery_areas')->insertGetId([
                     'name' => 'Faraway',
-                    'cost' =>  15,
-                    'restaurant_id'=>$lastRestaurantId
+                    'cost' => 15,
+                    'restaurant_id' => $lastRestaurantId,
                 ]);
 
                 //Staff 1 and 2
-                $demoStaffId=DB::table('users')->insertGetId([
+                $demoStaffId = DB::table('users')->insertGetId([
                     'name' => 'Demo Staff 1',
-                    'email' =>  ($lastRestaurantId==1?'staff':'staff1_'.$lastRestaurantId).'@example.com',
+                    'email' => ($lastRestaurantId == 1 ? 'staff' : 'staff1_'.$lastRestaurantId).'@example.com',
                     'password' => Hash::make('secret'),
                     'api_token' => Str::random(80),
                     'email_verified_at' => now(),
-                    'phone' =>  '',
+                    'phone' => '',
                     'created_at' => now(),
                     'updated_at' => now(),
-                    'restaurant_id'=>$lastRestaurantId
+                    'restaurant_id' => $lastRestaurantId,
                 ]);
 
-                $demoStaffId2=DB::table('users')->insertGetId([
+                $demoStaffId2 = DB::table('users')->insertGetId([
                     'name' => 'Demo Staff 2',
-                    'email' =>  'staff2_'.$lastRestaurantId.'@example.com',
+                    'email' => 'staff2_'.$lastRestaurantId.'@example.com',
                     'password' => Hash::make('secret'),
                     'api_token' => Str::random(80),
                     'email_verified_at' => now(),
-                    'phone' =>  '',
+                    'phone' => '',
                     'created_at' => now(),
                     'updated_at' => now(),
-                    'restaurant_id'=>$lastRestaurantId
+                    'restaurant_id' => $lastRestaurantId,
                 ]);
 
                 //Assign staff role
                 DB::table('model_has_roles')->insert([
                     'role_id' => 5,
-                    'model_type' =>  \App\User::class,
-                    'model_id'=> $demoStaffId,
+                    'model_type' => \App\User::class,
+                    'model_id' => $demoStaffId,
                 ]);
                 //Assign staff role
                 DB::table('model_has_roles')->insert([
                     'role_id' => 5,
-                    'model_type' =>  \App\User::class,
-                    'model_id'=> $demoStaffId2,
+                    'model_type' => \App\User::class,
+                    'model_id' => $demoStaffId2,
                 ]);
             }
 
@@ -269,182 +256,182 @@ class RestorantsTableSeeder extends Seeder
                 '6_to' => '23:58',
             ]);
 
-            if(!config('app.issd')){
-                $planInside=[
+            if (! config('app.issd')) {
+                $planInside = [
                     [
-                    "x" => 90.14,
-                    "y" => 59.02,
-                    "w" => 120.0,
-                    "h" => 87.0,
-                    "rounded" => "no",
+                        'x' => 90.14,
+                        'y' => 59.02,
+                        'w' => 120.0,
+                        'h' => 87.0,
+                        'rounded' => 'no',
                     ],
                     [
-                    "x" => 87.65,
-                    "y" => 173.37,
-                    "w" => 120.0,
-                    "h" => 87.0,
-                    "rounded" => "no",
+                        'x' => 87.65,
+                        'y' => 173.37,
+                        'w' => 120.0,
+                        'h' => 87.0,
+                        'rounded' => 'no',
                     ],
                     [
-                    "x" => 86.12,
-                    "y" => 285.06,
-                    "w" => 120.0,
-                    "h" => 87.0,
-                    "rounded" => "no",
+                        'x' => 86.12,
+                        'y' => 285.06,
+                        'w' => 120.0,
+                        'h' => 87.0,
+                        'rounded' => 'no',
                     ],
                     [
-                    "x" => 82.89,
-                    "y" => 401.49,
-                    "w" => 121.19,
-                    "h" => 87.0,
-                    "rounded" => "no",
+                        'x' => 82.89,
+                        'y' => 401.49,
+                        'w' => 121.19,
+                        'h' => 87.0,
+                        'rounded' => 'no',
                     ],
                     [
-                    "x" => 317.66,
-                    "y" => 191.56,
-                    "w" => 193.5,
-                    "h" => 156.62,
-                    "rounded" => "yes",
+                        'x' => 317.66,
+                        'y' => 191.56,
+                        'w' => 193.5,
+                        'h' => 156.62,
+                        'rounded' => 'yes',
                     ],
                     [
-                    "x" => 600.66,
-                    "y" => 295.35,
-                    "w" => 120.0,
-                    "h" => 120.0,
-                    "rounded" => "yes",
+                        'x' => 600.66,
+                        'y' => 295.35,
+                        'w' => 120.0,
+                        'h' => 120.0,
+                        'rounded' => 'yes',
                     ],
                     [
-                    "x" => 595.45,
-                    "y" => 141.78,
-                    "w" => 120.0,
-                    "h" => 120.0,
-                    "rounded" => "yes",
+                        'x' => 595.45,
+                        'y' => 141.78,
+                        'w' => 120.0,
+                        'h' => 120.0,
+                        'rounded' => 'yes',
                     ],
                     [
-                    "x" => 874.8,
-                    "y" => 45.66,
-                    "w" => 120.0,
-                    "h" => 87.0,
-                    "rounded" => "no",
+                        'x' => 874.8,
+                        'y' => 45.66,
+                        'w' => 120.0,
+                        'h' => 87.0,
+                        'rounded' => 'no',
                     ],
                     [
-                    "x" => 874.59,
-                    "y" => 177.19,
-                    "w" => 120.0,
-                    "h" => 191.45,
-                    "rounded" => "no",
+                        'x' => 874.59,
+                        'y' => 177.19,
+                        'w' => 120.0,
+                        'h' => 191.45,
+                        'rounded' => 'no',
                     ],
                     [
-                    "x" => 871.71,
-                    "y" => 418.7,
-                    "w" => 120.0,
-                    "h" => 87.0,
-                    "rounded" => "no",
+                        'x' => 871.71,
+                        'y' => 418.7,
+                        'w' => 120.0,
+                        'h' => 87.0,
+                        'rounded' => 'no',
                     ],
                 ];
 
-                $planTerrase=[
+                $planTerrase = [
                     [
-                    "x" => 487.37,
-                    "y" => 284.18,
-                    "w" => 246.98,
-                    "h" => 87.0,
-                    "rounded" => "no",
+                        'x' => 487.37,
+                        'y' => 284.18,
+                        'w' => 246.98,
+                        'h' => 87.0,
+                        'rounded' => 'no',
                     ],
                     [
-                    "x" => 222.27,
-                    "y" => 285.05,
-                    "w" => 242.19,
-                    "h" => 87.0,
-                    "rounded" => "no",
+                        'x' => 222.27,
+                        'y' => 285.05,
+                        'w' => 242.19,
+                        'h' => 87.0,
+                        'rounded' => 'no',
                     ],
                     [
-                    "x" => 223.63,
-                    "y" => 86.4,
-                    "w" => 120.0,
-                    "h" => 120.0,
-                    "rounded" => "yes",
+                        'x' => 223.63,
+                        'y' => 86.4,
+                        'w' => 120.0,
+                        'h' => 120.0,
+                        'rounded' => 'yes',
                     ],
                     [
-                    "x" => 420.13,
-                    "y" => 88.23,
-                    "w" => 120.0,
-                    "h" => 120.0,
-                    "rounded" => "yes",
+                        'x' => 420.13,
+                        'y' => 88.23,
+                        'w' => 120.0,
+                        'h' => 120.0,
+                        'rounded' => 'yes',
                     ],
                     [
-                    "x" => 614.11,
-                    "y" => 90.74,
-                    "w" => 120.0,
-                    "h" => 120.0,
-                    "rounded" => "yes",
+                        'x' => 614.11,
+                        'y' => 90.74,
+                        'w' => 120.0,
+                        'h' => 120.0,
+                        'rounded' => 'yes',
                     ],
                 ];
-                $areas = [['name'=>'Inside', 'count'=>10,'plan'=>$planInside], ['name'=>'Terrasse', 'count'=>5,'plan'=>$planTerrase]];
+                $areas = [['name' => 'Inside', 'count' => 10, 'plan' => $planInside], ['name' => 'Terrasse', 'count' => 5, 'plan' => $planTerrase]];
                 foreach ($areas as $key => $restoarea) {
                     $lastAreaID = DB::table('restoareas')->insertGetId([
-                        'name'=>$restoarea['name'],
+                        'name' => $restoarea['name'],
                         'restaurant_id' => $id,
                     ]);
 
                     for ($i = 0; $i < $restoarea['count']; $i++) {
                         DB::table('tables')->insertGetId([
-                            'name'=>'Table '.($i + 1),
+                            'name' => 'Table '.($i + 1),
                             'restaurant_id' => $id,
                             'restoarea_id' => $lastAreaID,
-                            'x'=>$restoarea['plan'][$i]['x'],
-                            'y'=>$restoarea['plan'][$i]['y'],
-                            'w'=>$restoarea['plan'][$i]['w'],
-                            'h'=>$restoarea['plan'][$i]['h'],
-                            'rounded'=>$restoarea['plan'][$i]['rounded'],
+                            'x' => $restoarea['plan'][$i]['x'],
+                            'y' => $restoarea['plan'][$i]['y'],
+                            'w' => $restoarea['plan'][$i]['w'],
+                            'h' => $restoarea['plan'][$i]['h'],
+                            'rounded' => $restoarea['plan'][$i]['rounded'],
                         ]);
                     }
                 }
 
                 foreach ($restorant['items'] as $category => $categoryData) {
                     DB::table('categories')->insert([
-                        'name'=>$category,
-                        'restorant_id'=>$id,
+                        'name' => $category,
+                        'company_id' => $id,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
 
                     foreach ($categoryData as $key => $menuItem) {
                         $lastItemID = DB::table('items')->insertGetId([
-                            'name'=>isset($menuItem['title']) ? $menuItem['title'] : '',
-                            'description'=>isset($menuItem['description']) ? $menuItem['description'] : '',
-                            'image'=>isset($menuItem['image']) ? $menuItem['image'] : '',
-                            'price'=>isset($menuItem['price']) ? $menuItem['price'] : '',
-                            'vat'=>21,
-                            'category_id'=>$catId,
+                            'name' => isset($menuItem['title']) ? $menuItem['title'] : '',
+                            'description' => isset($menuItem['description']) ? $menuItem['description'] : '',
+                            'image' => isset($menuItem['image']) ? $menuItem['image'] : '',
+                            'price' => isset($menuItem['price']) ? $menuItem['price'] : '',
+                            'vat' => 21,
+                            'category_id' => $catId,
                             'created_at' => now(),
                             'updated_at' => now(),
-                            'has_variants'=>strpos($menuItem['title'], 'izza') !== false || strpos($menuItem['title'], 'oney') !== false,
+                            'has_variants' => strpos($menuItem['title'], 'izza') !== false || strpos($menuItem['title'], 'oney') !== false,
                         ]);
 
                         //Add regular extras extras
                         if (strpos($menuItem['title'], 'alad') !== false) {
                             //Add extras
                             DB::table('extras')->insertGetId([
-                                'name'=>'Extra cheese',
-                                'price'=>1.2,
-                                'item_id'=>$lastItemID,
+                                'name' => 'Extra cheese',
+                                'price' => 1.2,
+                                'item_id' => $lastItemID,
 
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]);
                             DB::table('extras')->insertGetId([
-                                'name'=>'Extra olives',
-                                'price'=>0.3,
-                                'item_id'=>$lastItemID,
+                                'name' => 'Extra olives',
+                                'price' => 0.3,
+                                'item_id' => $lastItemID,
 
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]);
                             DB::table('extras')->insertGetId([
-                                'name'=>'Tuna',
-                                'price'=>1.5,
-                                'item_id'=>$lastItemID,
+                                'name' => 'Tuna',
+                                'price' => 1.5,
+                                'item_id' => $lastItemID,
 
                                 'created_at' => now(),
                                 'updated_at' => now(),
@@ -456,17 +443,17 @@ class RestorantsTableSeeder extends Seeder
                             $options_two = 'Valley,Mountain';
                             //Add options
                             $optionONEID = DB::table('options')->insertGetId([
-                                'name'=>'Size',
-                                'options'=>$options_one,
-                                'item_id'=>$lastItemID,
+                                'name' => 'Size',
+                                'options' => $options_one,
+                                'item_id' => $lastItemID,
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]);
 
                             $optionTWOID = DB::table('options')->insertGetId([
-                                'name'=>'Location',
-                                'options'=>$options_two,
-                                'item_id'=>$lastItemID,
+                                'name' => 'Location',
+                                'options' => $options_two,
+                                'item_id' => $lastItemID,
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]);
@@ -476,18 +463,17 @@ class RestorantsTableSeeder extends Seeder
                             foreach (explode(',', $options_one) as $key_one => $value_one) {
                                 foreach (explode(',', $options_two) as $key_two => $value_two) {
                                     $lastVariant = DB::table('variants')->insertGetId([
-                                        'price'=>$menuItem['price'] + $incPrice,
-                                        'options'=>'{"'.$optionONEID.'":"'.str_replace(' ', '-', mb_strtolower(trim($value_one))).'","'.$optionTWOID.'":"'.str_replace(' ', '-', mb_strtolower(trim($value_two))).'"}',
-                                        'item_id'=>$lastItemID,
+                                        'price' => $menuItem['price'] + $incPrice,
+                                        'options' => '{"'.$optionONEID.'":"'.str_replace(' ', '-', mb_strtolower(trim($value_one))).'","'.$optionTWOID.'":"'.str_replace(' ', '-', mb_strtolower(trim($value_two))).'"}',
+                                        'item_id' => $lastItemID,
                                         'created_at' => now(),
                                         'updated_at' => now(),
                                     ]);
                                     $incPrice++;
 
-                                    
                                 }
                             }
-                        
+
                         }
 
                         //Add variants and options
@@ -495,37 +481,37 @@ class RestorantsTableSeeder extends Seeder
 
                             //Extras
                             DB::table('extras')->insertGetId([
-                                'name'=>'Olive',
-                                'price'=>1,
-                                'item_id'=>$lastItemID,
+                                'name' => 'Olive',
+                                'price' => 1,
+                                'item_id' => $lastItemID,
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]);
 
                             DB::table('extras')->insertGetId([
-                                'name'=>'Mushroom',
-                                'price'=>0.5,
-                                'item_id'=>$lastItemID,
+                                'name' => 'Mushroom',
+                                'price' => 0.5,
+                                'item_id' => $lastItemID,
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]);
 
                             $lastPeperoniExpensive = DB::table('extras')->insertGetId([
-                                'name'=>'Peperoni',
-                                'price'=>2,
-                                'item_id'=>$lastItemID,
+                                'name' => 'Peperoni',
+                                'price' => 2,
+                                'item_id' => $lastItemID,
                                 'created_at' => now(),
                                 'updated_at' => now(),
-                                'extra_for_all_variants'=>0,
+                                'extra_for_all_variants' => 0,
                             ]);
 
                             $lastPeperoniCheep = DB::table('extras')->insertGetId([
-                                'name'=>'Peperoni',
-                                'price'=>1,
-                                'item_id'=>$lastItemID,
+                                'name' => 'Peperoni',
+                                'price' => 1,
+                                'item_id' => $lastItemID,
                                 'created_at' => now(),
                                 'updated_at' => now(),
-                                'extra_for_all_variants'=>0,
+                                'extra_for_all_variants' => 0,
                             ]);
 
                             $options_one = 'Small,Medium,Large,Family';
@@ -533,17 +519,17 @@ class RestorantsTableSeeder extends Seeder
 
                             //Add options
                             $optionONEID = DB::table('options')->insertGetId([
-                                'name'=>'Size',
-                                'options'=>$options_one,
-                                'item_id'=>$lastItemID,
+                                'name' => 'Size',
+                                'options' => $options_one,
+                                'item_id' => $lastItemID,
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]);
 
                             $optionTWOID = DB::table('options')->insertGetId([
-                                'name'=>'Crust',
-                                'options'=>$options_two,
-                                'item_id'=>$lastItemID,
+                                'name' => 'Crust',
+                                'options' => $options_two,
+                                'item_id' => $lastItemID,
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]);
@@ -553,9 +539,9 @@ class RestorantsTableSeeder extends Seeder
                             foreach (explode(',', $options_one) as $key_one => $value_one) {
                                 foreach (explode(',', $options_two) as $key_two => $value_two) {
                                     $lastVariant = DB::table('variants')->insertGetId([
-                                        'price'=>$menuItem['price'] + $incPrice,
-                                        'options'=>'{"'.$optionONEID.'":"'.str_replace(' ', '-', mb_strtolower(trim($value_one))).'","'.$optionTWOID.'":"'.str_replace(' ', '-', mb_strtolower(trim($value_two))).'"}',
-                                        'item_id'=>$lastItemID,
+                                        'price' => $menuItem['price'] + $incPrice,
+                                        'options' => '{"'.$optionONEID.'":"'.str_replace(' ', '-', mb_strtolower(trim($value_one))).'","'.$optionTWOID.'":"'.str_replace(' ', '-', mb_strtolower(trim($value_two))).'"}',
+                                        'item_id' => $lastItemID,
                                         'created_at' => now(),
                                         'updated_at' => now(),
                                     ]);
@@ -564,15 +550,15 @@ class RestorantsTableSeeder extends Seeder
                                     //Pepperoni price
                                     if ($value_one == 'Large' || $value_one == 'Family') {
                                         DB::table('variants_has_extras')->insertGetId([
-                                            'variant_id'=>$lastVariant,
-                                            'extra_id'=>$lastPeperoniCheep,
+                                            'variant_id' => $lastVariant,
+                                            'extra_id' => $lastPeperoniCheep,
                                             'created_at' => now(),
                                             'updated_at' => now(),
                                         ]);
                                     } else {
                                         DB::table('variants_has_extras')->insertGetId([
-                                            'variant_id'=>$lastVariant,
-                                            'extra_id'=>$lastPeperoniExpensive,
+                                            'variant_id' => $lastVariant,
+                                            'extra_id' => $lastPeperoniExpensive,
                                             'created_at' => now(),
                                             'updated_at' => now(),
                                         ]);
@@ -583,114 +569,115 @@ class RestorantsTableSeeder extends Seeder
                     }
                     $catId++;
                 }
-         }
+            }
 
             $id++;
         }
     }
 
-    public function demoDriversInsert($restorant,$lastRestaurantId,$assignToVendor){
+    public function demoDriversInsert($restorant, $lastRestaurantId, $assignToVendor)
+    {
         //Insert 2 demo drivers per restaurant
-        $imagesDemoDrivers=[
-            ['https://randomuser.me/api/portraits/men/81.jpg','https://randomuser.me/api/portraits/men/62.jpg'],
-            ['https://randomuser.me/api/portraits/men/32.jpg','https://randomuser.me/api/portraits/men/46.jpg'],
-            ['https://randomuser.me/api/portraits/men/18.jpg','https://randomuser.me/api/portraits/men/72.jpg'],
+        $imagesDemoDrivers = [
+            ['https://randomuser.me/api/portraits/men/81.jpg', 'https://randomuser.me/api/portraits/men/62.jpg'],
+            ['https://randomuser.me/api/portraits/men/32.jpg', 'https://randomuser.me/api/portraits/men/46.jpg'],
+            ['https://randomuser.me/api/portraits/men/18.jpg', 'https://randomuser.me/api/portraits/men/72.jpg'],
         ];
-        $vehiclesDemoDrivers=[
-            ['Nissan Qashqai','Tesla Model S'],
-            ['Toyota Yaris','Toyota RAV4'],
-            ['Honda CR-V','Honda Civic'],
+        $vehiclesDemoDrivers = [
+            ['Nissan Qashqai', 'Tesla Model S'],
+            ['Toyota Yaris', 'Toyota RAV4'],
+            ['Honda CR-V', 'Honda Civic'],
         ];
 
-        $namesDemoDrivers=[
-            ['John Doe - ( Demo Driver )','Maurice Graves'],
-            ['Gabe Elliott','Gilbert Sanders'],
-            ['Rene Holland','Vincent Mcdonalid'],
+        $namesDemoDrivers = [
+            ['John Doe - ( Demo Driver )', 'Maurice Graves'],
+            ['Gabe Elliott', 'Gilbert Sanders'],
+            ['Rene Holland', 'Vincent Mcdonalid'],
         ];
         //Staff 1 and 2
-        $demoDriver1Data=[
-            'name' => $namesDemoDrivers[$lastRestaurantId-1][0],
-            'email' =>  ($lastRestaurantId==1?'driver':'driver1_'.$lastRestaurantId).'@example.com',
+        $demoDriver1Data = [
+            'name' => $namesDemoDrivers[$lastRestaurantId - 1][0],
+            'email' => ($lastRestaurantId == 1 ? 'driver' : 'driver1_'.$lastRestaurantId).'@example.com',
             'password' => Hash::make('secret'),
             'lat' => $restorant['latlngs'][0][0],
             'lng' => $restorant['latlngs'][0][1],
             'api_token' => Str::random(80),
             'email_verified_at' => now(),
-            'phone' =>  '+38971605048',
+            'phone' => '+38971605048',
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ];
-        if($assignToVendor){
-            $demoDriver1Data['restaurant_id']=$lastRestaurantId;
+        if ($assignToVendor) {
+            $demoDriver1Data['restaurant_id'] = $lastRestaurantId;
         }
-        $demoDriver1Id=DB::table('users')->insertGetId($demoDriver1Data);
+        $demoDriver1Id = DB::table('users')->insertGetId($demoDriver1Data);
 
         //Assign driver role
         DB::table('model_has_roles')->insert([
             'role_id' => 3,
-            'model_type' =>  \App\User::class,
-            'model_id'=> $demoDriver1Id,
+            'model_type' => \App\User::class,
+            'model_id' => $demoDriver1Id,
         ]);
 
         //Assign vehicle
         DB::table('configs')->insert([
-            'value' => $vehiclesDemoDrivers[$lastRestaurantId-1][0],
+            'value' => $vehiclesDemoDrivers[$lastRestaurantId - 1][0],
             'key' => 'vehicle',
-            'model_type'=>  \App\User::class,
-            'model_id'=>$demoDriver1Id
+            'model_type' => \App\User::class,
+            'model_id' => $demoDriver1Id,
         ]);
         //Assign image
         DB::table('configs')->insert([
-            'value' => $imagesDemoDrivers[$lastRestaurantId-1][0],
+            'value' => $imagesDemoDrivers[$lastRestaurantId - 1][0],
             'key' => 'avatar',
-            'model_type'=>  \App\User::class,
-            'model_id'=>$demoDriver1Id
+            'model_type' => \App\User::class,
+            'model_id' => $demoDriver1Id,
         ]);
         //Assign cost
-        if($lastRestaurantId==1){
+        if ($lastRestaurantId == 1) {
             DB::table('configs')->insert([
                 'value' => 1.2,
                 'key' => 'cost_per_kilometer',
-                'model_type'=>  \App\Restorant::class,
-                'model_id'=>$lastRestaurantId
+                'model_type' => \App\Restorant::class,
+                'model_id' => $lastRestaurantId,
             ]);
         }
-        
-        $demoDriver2Data=[
-            'name' => $namesDemoDrivers[$lastRestaurantId-1][1],
+
+        $demoDriver2Data = [
+            'name' => $namesDemoDrivers[$lastRestaurantId - 1][1],
             'lat' => $restorant['latlngs'][1][0],
             'lng' => $restorant['latlngs'][1][1],
-            'email' =>  ('driver2_'.$lastRestaurantId).'@example.com',
+            'email' => ('driver2_'.$lastRestaurantId).'@example.com',
             'password' => Hash::make('secret'),
             'api_token' => Str::random(80),
             'email_verified_at' => now(),
-            'phone' =>  '+38971605048',
+            'phone' => '+38971605048',
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ];
-        if($assignToVendor){
-            $demoDriver2Data['restaurant_id']=$lastRestaurantId;
+        if ($assignToVendor) {
+            $demoDriver2Data['restaurant_id'] = $lastRestaurantId;
         }
-        $demoDriver2Id=DB::table('users')->insertGetId($demoDriver2Data);
+        $demoDriver2Id = DB::table('users')->insertGetId($demoDriver2Data);
         //Assign driver role
         DB::table('model_has_roles')->insert([
             'role_id' => 3,
-            'model_type' =>  \App\User::class,
-            'model_id'=> $demoDriver2Id,
+            'model_type' => \App\User::class,
+            'model_id' => $demoDriver2Id,
         ]);
         //Assign vehicle
         DB::table('configs')->insert([
-            'value' => $vehiclesDemoDrivers[$lastRestaurantId-1][1],
+            'value' => $vehiclesDemoDrivers[$lastRestaurantId - 1][1],
             'key' => 'vehicle',
-            'model_type'=>  \App\User::class,
-            'model_id'=>$demoDriver2Id
+            'model_type' => \App\User::class,
+            'model_id' => $demoDriver2Id,
         ]);
         //Assign image
         DB::table('configs')->insert([
-            'value' => $imagesDemoDrivers[$lastRestaurantId-1][1],
+            'value' => $imagesDemoDrivers[$lastRestaurantId - 1][1],
             'key' => 'avatar',
-            'model_type'=>  \App\User::class,
-            'model_id'=>$demoDriver2Id
+            'model_type' => \App\User::class,
+            'model_id' => $demoDriver2Id,
         ]);
     }
 }

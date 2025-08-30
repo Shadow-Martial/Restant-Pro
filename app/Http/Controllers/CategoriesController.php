@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Categories;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class CategoriesController extends Controller
@@ -29,20 +30,17 @@ class CategoriesController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $category = new Categories;
         $category->name = strip_tags($request->category_name);
-        $category->restorant_id = $request->restaurant_id;
+        $category->company_id = $request->restaurant_id;
         $category->save();
 
         if (auth()->user()->hasRole('admin')) {
             //Direct to that page directly
-            return redirect()->route('items.admin', ['restorant'=>$request->restaurant_id])->withStatus(__('Category successfully created.'));
+            return redirect()->route('items.admin', ['restorant' => $request->restaurant_id])->withStatus(__('Category successfully created.'));
         }
 
         return redirect()->route('items.index')->withStatus(__('Category successfully created.'));
@@ -51,10 +49,9 @@ class CategoriesController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(int $id)
     {
         //
     }
@@ -62,10 +59,9 @@ class CategoriesController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(int $id)
     {
         //
     }
@@ -73,11 +69,9 @@ class CategoriesController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Categories $category)
+    public function update(Request $request, Categories $category): RedirectResponse
     {
         $category->name = $request->category_name;
         $category->update();
@@ -89,11 +83,11 @@ class CategoriesController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function destroy(Categories $category)
+    public function destroy(Categories $category): RedirectResponse
     {
         $category->delete();
+
         return redirect()->route('items.index')->withStatus(__('Category successfully deleted.'));
     }
 }

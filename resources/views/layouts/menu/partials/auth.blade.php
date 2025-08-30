@@ -47,7 +47,9 @@
     @endif
     @if(auth()->user()->hasRole('client'))
         <a href="/orders" class="dropdown-item">{{ __('My Orders') }}</a>
-        <a href="/addresses" class="dropdown-item">{{ __('My Addresses') }}</a>
+        @if(config('app.isft'))
+            <a href="/addresses" class="dropdown-item">{{ __('My Addresses') }}</a>
+        @endif
     @endif
     @if(auth()->user()->hasRole('driver'))
         <a href="/home" class="dropdown-item">{{ __('Dashboard') }}</a>

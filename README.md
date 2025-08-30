@@ -6,7 +6,7 @@
 
 
 ## Test
-sail artisan test --testsuite=Feature
+php artisan test --testsuite=Feature
 
 ## License
 
@@ -33,30 +33,30 @@ MAIL_FROM_NAME='App Demo'
 
 ## Updates
 
-git diff --name-only 49b736c231b1de9ae4ecdce31307960a9d13b087 0abba369fa214151892283d938f8e58dacabd592 > .diff-files.txt && npm run zipupdate
+git diff --name-only 07f20373480c2237d3e5a743aca217089afeee02 > .diff-files.txt && npm run zipupdate
 
 COMPOSER_MEMORY_LIMIT=-1 composer require */**
 
 ## Clearing cache
-sail artisan cache:clear
+php artisan cache:clear
 ddcache
-sail artisan config:cache
-sail artisan config:clear
-sail artisan route:clear
-sail artisan config:cache
-sail artisan route:cache
-sail artisan optimize
+php artisan config:cache
+php artisan config:clear
+php artisan route:clear
+php artisan config:cache
+php artisan route:cache
+php artisan optimize
 
 ## Create new module
-sail artisan module:make Fields
-sail artisan module:make-migration create_fields_table fields
+php artisan module:make Fields
+php artisan module:make-migration create_fields_table fields
 https://github.com/akaunting/laravel-module
 
 ## Zip withoit mac
 zip -r es_lang.zip . -x ".*" -x "__MACOSX"
 
 ## Sync missing keys
-sail artisan translation:sync-missing-translation-keys
+php artisan translation:sync-missing-translation-keys
 
 
 ## Default .env

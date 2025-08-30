@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use Akaunting\Module\Facade as Module;
 use App\City;
+use App\Models\Posts;
 use App\Notifications\DriverCreated;
 use App\Order;
+use App\Plans;
 use App\Status;
-use App\Tables;
 use App\User;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
-use Akaunting\Module\Facade as Module;
-use App\Models\Posts;
 
 class DriverController extends Controller
 {
@@ -37,13 +38,13 @@ class DriverController extends Controller
         }
 
         $arr = [
-            ['class'=>$class, 'ftype'=>'input', 'name'=>'Name', 'id'=>'name', 'placeholder'=>__('Driver name'), 'required'=>true],
-            ['class'=>$class, 'ftype'=>'input', 'name'=>'Email', 'id'=>'email', 'placeholder'=>__('Driver email'), 'required'=>true],
-            ['class'=>$class, 'ftype'=>'input', 'name'=>'Phone', 'id'=>'phone_number', 'placeholder'=>__('Driver phone'), 'required'=>true],
+            ['class' => $class, 'ftype' => 'input', 'name' => 'Name', 'id' => 'name', 'placeholder' => __('Driver name'), 'required' => true],
+            ['class' => $class, 'ftype' => 'input', 'name' => 'Email', 'id' => 'email', 'placeholder' => __('Driver email'), 'required' => true],
+            ['class' => $class, 'ftype' => 'input', 'name' => 'Phone', 'id' => 'phone_number', 'placeholder' => __('Driver phone'), 'required' => true],
         ];
 
         if (config('settings.multi_city')) {
-            array_push($arr, ['class'=>$class, 'ftype'=>'select', 'name'=>'City', 'id'=>'city', 'placeholder'=>__('Select city'), 'data'=>$citiesData, 'required'=>true]);
+            array_push($arr, ['class' => $class, 'ftype' => 'select', 'name' => 'City', 'id' => 'city', 'placeholder' => __('Select city'), 'data' => $citiesData, 'required' => true]);
         }
 
         return $arr;
@@ -57,16 +58,17 @@ class DriverController extends Controller
     public function index()
     {
         if (auth()->user()->hasRole('admin')) {
-            return view('drivers.index', ['drivers' =>User::role('driver')->whereNull('restaurant_id')->paginate(15)]);
-        }else if(auth()->user()->hasRole('owner')&&in_array("drivers", config('global.modules',[]))){
-            return view('drivers.index', ['drivers' =>User::role('driver')->where('restaurant_id',auth()->user()->restorant->id)->paginate(15)]);
+            return view('drivers.index', ['drivers' => User::role('driver')->whereNull('restaurant_id')->paginate(15)]);
+        } elseif (auth()->user()->hasRole('owner') && in_array('drivers', config('global.modules', []))) {
+            return view('drivers.index', ['drivers' => User::role('driver')->where('restaurant_id', auth()->user()->restorant->id)->paginate(15)]);
         } else {
             return redirect()->route('orders.index')->withStatus(__('No Access'));
         }
     }
 
-    private function hasAccessToDrivers(){
-        return (auth()->user()->hasRole('admin') || (auth()->user()->hasRole('owner') && in_array("drivers", config('global.modules',[]))));
+    private function hasAccessToDrivers()
+    {
+        return auth()->user()->hasRole('admin') || (auth()->user()->hasRole('owner') && in_array('drivers', config('global.modules', [])));
     }
 
     /**
@@ -76,7 +78,14 @@ class DriverController extends Controller
      */
     public function create()
     {
-        if ($this->hasAccessToDrivers()) {
+        //If Foodtiger, allow directly
+        if (config('app.isft')) {
+            return view('drivers.create');
+        }
+        $currentPlan = Plans::withTrashed()->find(auth()->user()->mplanid());
+        if ($currentPlan->limit_items != 0 && User::role('driver')->where('restaurant_id', auth()->user()->restorant->id)->count() >= $currentPlan->limit_items) {
+            return redirect(route('plans.current'))->withError(__('You need to subscribe to a pro plan'));
+        } elseif ($this->hasAccessToDrivers()) {
             return view('drivers.create');
         } else {
             return redirect()->route('orders.index')->withStatus(__('No Access'));
@@ -85,11 +94,8 @@ class DriverController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         //Validate
         $request->validate([
@@ -98,14 +104,12 @@ class DriverController extends Controller
             'phone_driver' => ['required', 'string', 'regex:/^([0-9\s\-\+\(\)]*)$/'],
         ]);
 
-               
-
         //Create the driver
         $generatedPassword = Str::random(10);
 
         //In demo mode, pass is secret
-        if(config('settings.is_demo',false)){
-            $generatedPassword="secret";
+        if (config('settings.is_demo', false)) {
+            $generatedPassword = 'secret';
         }
 
         $driver = new User;
@@ -114,12 +118,10 @@ class DriverController extends Controller
         $driver->phone = strip_tags($request->phone_driver);
         $driver->api_token = Str::random(80);
         $driver->password = Hash::make($generatedPassword);
-        if(auth()->user()->hasRole('owner')){
-            $driver->restaurant_id=auth()->user()->restorant->id;
-        } 
+        if (auth()->user()->hasRole('owner')) {
+            $driver->restaurant_id = auth()->user()->restorant->id;
+        }
         $driver->save();
-
-        
 
         //Assign role
         $driver->assignRole('driver');
@@ -133,7 +135,6 @@ class DriverController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Driver  $driver
      * @return \Illuminate\Http\Response
      */
     public function show(User $driver)
@@ -144,73 +145,68 @@ class DriverController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Driver  $driver
      * @return \Illuminate\Http\Response
      */
     public function edit(User $driver)
     {
         //Today paid orders
-        $today=Order::where(['driver_id'=>$driver->id])->where('payment_status','paid')->where('created_at', '>=', Carbon::today());
-       
+        $today = Order::where(['driver_id' => $driver->id])->where('payment_status', 'paid')->where('created_at', '>=', Carbon::today());
+
         //Week paid orders
-        $week=Order::where(['driver_id'=>$driver->id])->where('payment_status','paid')->where('created_at', '>=', Carbon::now()->startOfWeek());
+        $week = Order::where(['driver_id' => $driver->id])->where('payment_status', 'paid')->where('created_at', '>=', Carbon::now()->startOfWeek());
 
         //This month paid orders
-        $month=Order::where(['driver_id'=>$driver->id])->where('payment_status','paid')->where('created_at', '>=', Carbon::now()->startOfMonth());
+        $month = Order::where(['driver_id' => $driver->id])->where('payment_status', 'paid')->where('created_at', '>=', Carbon::now()->startOfMonth());
 
-        //Previous month paid orders 
-        $previousmonth=Order::where(['driver_id'=>$driver->id])->where('payment_status','paid')->where('created_at', '>=',  Carbon::now()->subMonth(1)->startOfMonth())->where('created_at', '<',  Carbon::now()->subMonth(1)->endOfMonth());
-
+        //Previous month paid orders
+        $previousmonth = Order::where(['driver_id' => $driver->id])->where('payment_status', 'paid')->where('created_at', '>=', Carbon::now()->subMonth(1)->startOfMonth())->where('created_at', '<', Carbon::now()->subMonth(1)->endOfMonth());
 
         //This user driver_percent_from_deliver
-        $driver_percent_from_deliver=intval(auth()->user()->getConfig('driver_percent_from_deliver',config('settings.driver_percent_from_deliver')))/100;
+        $driver_percent_from_deliver = intval(auth()->user()->getConfig('driver_percent_from_deliver', config('settings.driver_percent_from_deliver'))) / 100;
 
         $earnings = [
-            'today'=>[
-                'orders'=>$today->count(),
-                'earning'=>$today->sum('delivery_price')*$driver_percent_from_deliver,
-                'icon'=>'bg-gradient-red'
+            'today' => [
+                'orders' => $today->count(),
+                'earning' => $today->sum('delivery_price') * $driver_percent_from_deliver,
+                'icon' => 'bg-gradient-red',
             ],
-            'week'=>[
-                'orders'=>$week->count(),
-                'earning'=>$week->sum('delivery_price')*$driver_percent_from_deliver,
-                'icon'=>'bg-gradient-orange'
+            'week' => [
+                'orders' => $week->count(),
+                'earning' => $week->sum('delivery_price') * $driver_percent_from_deliver,
+                'icon' => 'bg-gradient-orange',
             ],
-            'month'=>[
-                'orders'=>$month->count(),
-                'earning'=>$month->sum('delivery_price')*$driver_percent_from_deliver,
-                'icon'=>'bg-gradient-green'
+            'month' => [
+                'orders' => $month->count(),
+                'earning' => $month->sum('delivery_price') * $driver_percent_from_deliver,
+                'icon' => 'bg-gradient-green',
             ],
-            'previous'=>[
-                'orders'=>$previousmonth->count(),
-                'earning'=>$previousmonth->sum('delivery_price')*$driver_percent_from_deliver,
-                'icon'=>'bg-gradient-info'
-            ]
+            'previous' => [
+                'orders' => $previousmonth->count(),
+                'earning' => $previousmonth->sum('delivery_price') * $driver_percent_from_deliver,
+                'icon' => 'bg-gradient-info',
+            ],
         ];
 
-        $extraViews=[];
+        $extraViews = [];
         foreach (Module::all() as $key => $module) {
-            if(is_array($module->get('userextra'))){
+            if (is_array($module->get('userextra'))) {
                 foreach ($module->get('userextra') as $key => $menu) {
-                   array_push($extraViews,$menu);
+                    array_push($extraViews, $menu);
                 }
             }
         }
 
-
-       
-
         if (auth()->user()->hasRole('admin') || (
-                auth()->user()->hasRole('owner')
-                &&in_array("drivers", config('global.modules',[]))
-                &&$driver->restaurant_id==auth()->user()->restorant->id
+            auth()->user()->hasRole('owner')
+            && in_array('drivers', config('global.modules', []))
+            && $driver->restaurant_id == auth()->user()->restorant->id
         )) {
 
             return view('drivers.edit', [
-                'extraViews'=>$extraViews,
-                'drivercategories'=>Posts::where('post_type','driver')->get(),
+                'extraViews' => $extraViews,
+                'drivercategories' => Posts::where('post_type', 'driver')->get(),
                 'driver' => $driver,
-                'earnings' => $earnings
+                'earnings' => $earnings,
             ]);
         } else {
             return redirect()->route('orders.index')->withStatus(__('No Access'));
@@ -220,8 +216,6 @@ class DriverController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Driver  $driver
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, User $driver)
@@ -231,11 +225,8 @@ class DriverController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param  \App\Driver  $driver
-     * @return \Illuminate\Http\Response
      */
-    public function destroy(User $driver)
+    public function destroy(User $driver): RedirectResponse
     {
         $driver->active = 0;
         $driver->save();
@@ -243,7 +234,7 @@ class DriverController extends Controller
         return redirect()->route('drivers.index')->withStatus(__('Driver successfully deleted.'));
     }
 
-    public function activateDriver(User $driver)
+    public function activateDriver(User $driver): RedirectResponse
     {
         $driver->active = 1;
         $driver->update();
@@ -251,25 +242,26 @@ class DriverController extends Controller
         return redirect()->route('drivers.index')->withStatus(__('Driver successfully activated.'));
     }
 
-    public function register()
+    public function register(): View
     {
         config([
-            'global.restorant_details_cover_image' =>  "",
+            'global.restorant_details_cover_image' => '',
         ]);
+
         return view('general.form_front', ['setup' => [
-            'inrow'=>true,
-            'action_link'=>null,
-            'action_name'=>__('crud.back'),
-            'title'=>__('crud.new_item', ['item'=>__('Driver')]),
-            'iscontent'=>true,
-            'action'=>route('driver.register.store')
+            'inrow' => true,
+            'action_link' => null,
+            'action_name' => __('crud.back'),
+            'title' => __('crud.new_item', ['item' => __('Driver')]),
+            'iscontent' => true,
+            'action' => route('driver.register.store'),
         ],
-        'fields'=>$this->getFields('col-md-12'), ]);
+            'fields' => $this->getFields('col-md-12'), ]);
     }
 
-    public function registerStore(Request $request)
+    public function registerStore(Request $request): RedirectResponse
     {
-        $theRules=[
+        $theRules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'unique:users,email', 'max:255'],
             'phone_number' => ['required', 'string', 'regex:/^([0-9\s\-\+\(\)]*)$/'],
@@ -284,9 +276,9 @@ class DriverController extends Controller
         $generatedPassword = Str::random(10);
 
         $driver = $this->provider::create([
-            'name'=>strip_tags($request->name),
-            'phone_number'=>strip_tags($request->phone_number),
-            'email'=>strip_tags($request->email),
+            'name' => strip_tags($request->name),
+            'phone_number' => strip_tags($request->phone_number),
+            'email' => strip_tags($request->email),
             'api_token' => Str::random(80),
             'password' => Hash::make($generatedPassword),
 
@@ -302,16 +294,16 @@ class DriverController extends Controller
         return redirect()->back()->withStatus(__('notifications_thanks_andcheckemail'));
     }
 
-    public function getToken(Request $request)
+    public function getToken(Request $request): JsonResponse
     {
-        $user = User::where(['active'=>1, 'email'=>$request->email])->first();
+        $user = User::where(['active' => 1, 'email' => $request->email])->first();
         if ($user != null) {
             if (Hash::check($request->password, $user->password)) {
                 if ($user->hasRole(['driver'])) {
                     return response()->json([
                         'status' => true,
                         'token' => $user->api_token,
-                        'id'=>$user->id,
+                        'id' => $user->id,
                     ]);
                 } else {
                     return response()->json([
@@ -333,21 +325,21 @@ class DriverController extends Controller
         }
     }
 
-    public function getOrders()
+    public function getOrders(): JsonResponse
     {
         $orders = Order::orderBy('created_at', 'desc');
-        $orders = $orders->where(['driver_id'=>auth()->user()->id]);
+        $orders = $orders->where(['driver_id' => auth()->user()->id]);
         $orders = $orders->where('created_at', '>=', Carbon::today());
 
         return response()->json([
             'data' => $orders->with(['items', 'status', 'restorant', 'client', 'address'])->get(),
-            'driver_id'=>auth()->user()->id,
+            'driver_id' => auth()->user()->id,
             'status' => true,
             'errMsg' => '',
         ]);
     }
 
-    public function orderTracking(Order $order, $lat, $lng)
+    public function orderTracking(Order $order, $lat, $lng): JsonResponse
     {
         $order->lat = $lat;
         $order->lng = $lng;
@@ -359,10 +351,10 @@ class DriverController extends Controller
         ]);
     }
 
-    public function driverTracking($lat, $lng)
+    public function driverTracking($lat, $lng): JsonResponse
     {
-        auth()->user()->lat=$lat;
-        auth()->user()->lat=$lng;
+        auth()->user()->lat = $lat;
+        auth()->user()->lat = $lng;
         auth()->user->update();
 
         return response()->json([
@@ -371,9 +363,9 @@ class DriverController extends Controller
         ]);
     }
 
-    public function updateOrderStatus(Order $order, Status $status)
+    public function updateOrderStatus(Order $order, Status $status): JsonResponse
     {
-        $order->status()->attach($status->id, ['user_id'=>auth()->user()->id, 'comment'=>isset($_GET['comment']) ? $_GET['comment'] : '']);
+        $order->status()->attach($status->id, ['user_id' => auth()->user()->id, 'comment' => isset($_GET['comment']) ? $_GET['comment'] : '']);
         if ($status->id == 6) {
             $order->lat = $order->restorant->lat;
             $order->lng = $order->restorant->lng;
@@ -388,11 +380,11 @@ class DriverController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Order updated',
-            'data'=> Order::where(['id'=>$order->id])->with(['items', 'status', 'restorant', 'client', 'address'])->get(),
+            'data' => Order::where(['id' => $order->id])->with(['items', 'status', 'restorant', 'client', 'address'])->get(),
         ]);
     }
 
-    public function updateOrderLocation(Order $order, $lat, $lng)
+    public function updateOrderLocation(Order $order, $lat, $lng): JsonResponse
     {
         //Only assigned driver
         if (auth()->user()->id == $order->driver_id) {
@@ -415,43 +407,41 @@ class DriverController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Order not on this driver',
-                'data'=> Order::where(['id'=>$order->id])->with(['items', 'status', 'restorant', 'client', 'address'])->get(),
+                'data' => Order::where(['id' => $order->id])->with(['items', 'status', 'restorant', 'client', 'address'])->get(),
             ]);
         }
     }
 
-    public function driverlocations()
+    public function driverlocations(): JsonResponse
     {
-       
-        if (!$this->hasAccessToDrivers()) {
-            abort(404,'Not allowed');
+
+        if (! $this->hasAccessToDrivers()) {
+            abort(404, 'Not allowed');
         }
-  
 
         //1. Get all the working drivers, where active and working
         $theQuery = User::with([
-               'driverorders'=>function ($query) {
-                   $query->where('orders.payment_status', '!=', 'paid');
-               },
-               'driverorders.restorant', 'driverorders.laststatus', 'driverorders.address', ])
+            'driverorders' => function ($query) {
+                $query->where('orders.payment_status', '!=', 'paid');
+            },
+            'driverorders.restorant', 'driverorders.laststatus', 'driverorders.address', ])
             ->with('paths')
             ->role('driver')
-            ->where(['active'=>1, 'working'=>1]);
+            ->where(['active' => 1, 'working' => 1]);
 
-
-        if(auth()->user()->hasRole('owner')){
-            $theQuery=$theQuery->where('restaurant_id',auth()->user()->restorant->id);
-        }else{
-            $theQuery=$theQuery->whereNull('restaurant_id');
+        if (auth()->user()->hasRole('owner')) {
+            $theQuery = $theQuery->where('restaurant_id', auth()->user()->restorant->id);
+        } else {
+            $theQuery = $theQuery->whereNull('restaurant_id');
         }
         $toRespond = [
-            'drivers'=> $theQuery->get(),
+            'drivers' => $theQuery->get(),
         ];
 
         return response()->json($toRespond);
     }
 
-    public function goOffline()
+    public function goOffline(): JsonResponse
     {
         auth()->user()->working = 0;
         auth()->user()->update();
@@ -463,7 +453,7 @@ class DriverController extends Controller
         ]);
     }
 
-    public function goOnline()
+    public function goOnline(): JsonResponse
     {
         auth()->user()->working = 1;
         auth()->user()->update();
@@ -475,7 +465,7 @@ class DriverController extends Controller
         ]);
     }
 
-    public function acceptOrder(Order $order)
+    public function acceptOrder(Order $order): JsonResponse
     {
         //This driver decides to accept the order
 
@@ -483,7 +473,7 @@ class DriverController extends Controller
         if (auth()->user()->id == $order->driver_id) {
 
             //1. Order will be accepted
-            $order->status()->attach([13 => ['comment'=>'Driver accepts order', 'user_id' => auth()->user()->id]]);
+            $order->status()->attach([13 => ['comment' => 'Driver accepts order', 'user_id' => auth()->user()->id]]);
 
             return response()->json([
                 'status' => true,
@@ -497,7 +487,7 @@ class DriverController extends Controller
         }
     }
 
-    public function rejectOrder(Order $order)
+    public function rejectOrder(Order $order): JsonResponse
     {
         //This driver decides to reject the order
 
@@ -506,7 +496,7 @@ class DriverController extends Controller
 
             //1. Order will be rejected
             $order->driver_id = null;
-            $order->status()->attach([12 => ['comment'=>'Driver reject order', 'user_id' => auth()->user()->id]]);
+            $order->status()->attach([12 => ['comment' => 'Driver reject order', 'user_id' => auth()->user()->id]]);
             $order->update();
 
             //2. TODO Look for new driver

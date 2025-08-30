@@ -65,22 +65,14 @@ class ExpoMessage
 
     /**
      * Create a message with given body.
-     *
-     * @param string $title
-     * @param string $body
-     *
-     * @return static
      */
-    public static function create($title = '', $body = ''): ExpoMessage
+    public static function create(string $title = '', string $body = ''): ExpoMessage
     {
         return new static($title, $body);
     }
 
     /**
      * ExpoMessage constructor.
-     *
-     * @param string $title
-     * @param string $body
      */
     public function __construct(string $title = '', string $body = '')
     {
@@ -90,10 +82,6 @@ class ExpoMessage
 
     /**
      * Set the message title.
-     *
-     * @param string $value
-     *
-     * @return $this
      */
     public function title(string $value): ExpoMessage
     {
@@ -104,10 +92,6 @@ class ExpoMessage
 
     /**
      * Set the message body.
-     *
-     * @param string $value
-     *
-     * @return $this
      */
     public function body(string $value): ExpoMessage
     {
@@ -118,8 +102,6 @@ class ExpoMessage
 
     /**
      * Enable the message sound.
-     *
-     * @return $this
      */
     public function enableSound(): ExpoMessage
     {
@@ -130,8 +112,6 @@ class ExpoMessage
 
     /**
      * Disable the message sound.
-     *
-     * @return $this
      */
     public function disableSound(): ExpoMessage
     {
@@ -142,10 +122,6 @@ class ExpoMessage
 
     /**
      * Set the message badge (iOS).
-     *
-     * @param int $value
-     *
-     * @return $this
      */
     public function badge(int $value): ExpoMessage
     {
@@ -156,10 +132,6 @@ class ExpoMessage
 
     /**
      * Set the time to live of the notification.
-     *
-     * @param int $ttl
-     *
-     * @return $this
      */
     public function setTtl(int $ttl): ExpoMessage
     {
@@ -170,10 +142,6 @@ class ExpoMessage
 
     /**
      * Set the channelId of the notification for Android devices.
-     *
-     * @param string $channelId
-     *
-     * @return $this
      */
     public function setChannelId(string $channelId): ExpoMessage
     {
@@ -185,9 +153,7 @@ class ExpoMessage
     /**
      * Set the json Data attached to the message.
      *
-     * @param array|string $data
-     *
-     * @return $this
+     * @param  array|string  $data
      *
      * @throws CouldNotSendNotification
      */
@@ -199,7 +165,7 @@ class ExpoMessage
             @json_decode($data);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw  CouldNotSendNotification::genericMessage('Invalid json format passed to setJsonData().');
+                throw CouldNotSendNotification::genericMessage('Invalid json format passed to setJsonData().');
             }
         }
 
@@ -210,10 +176,6 @@ class ExpoMessage
 
     /**
      *  Set the priority of the notification, must be one of [default, normal, high].
-     *
-     * @param string $priority
-     *
-     * @return $this
      */
     public function priority(string $priority): ExpoMessage
     {
@@ -224,19 +186,17 @@ class ExpoMessage
 
     /**
      * Get an array representation of the message.
-     *
-     * @return array
      */
     public function toArray(): array
     {
         $message = [
-            'title'     =>  $this->title,
-            'body'      =>  $this->body,
-            'sound'     =>  $this->sound,
-            'badge'     =>  $this->badge,
-            'ttl'       =>  $this->ttl,
-            'data'      =>  $this->jsonData,
-            'priority'  =>  $this->priority,
+            'title' => $this->title,
+            'body' => $this->body,
+            'sound' => $this->sound,
+            'badge' => $this->badge,
+            'ttl' => $this->ttl,
+            'data' => $this->jsonData,
+            'priority' => $this->priority,
         ];
         if (! empty($this->channelId)) {
             $message['channelId'] = $this->channelId;

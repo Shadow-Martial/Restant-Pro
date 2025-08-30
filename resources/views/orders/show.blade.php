@@ -60,7 +60,7 @@
                 @endif
 
                 @if(auth()->user()->hasRole('client'))
-                @if($order->status->pluck('alias')->last() == "delivered")
+                @if($order->status->pluck('alias')->last() == "delivered"||$order->status->pluck('alias')->last() == "closed")
                     <br/>
                     @include('orders.partials.rating',['order'=>$order])
                 @endif

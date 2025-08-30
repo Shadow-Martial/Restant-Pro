@@ -116,7 +116,7 @@
         <script type="text/javascript" src="{{ asset('vendor') }}/daterangepicker/daterangepicker.min.js"></script>
 
         <!-- All in one -->
-        <script src="{{ asset('custom') }}/js/js.js?id={{ config('config.version')}}"></script>
+        <script src="{{ asset('custom') }}/js/js.js?id={{ config('version.version')}}"></script>
 
         <!-- Argon JS -->
         <script src="{{ asset('argon') }}/js/argon.js?v=1.0.0"></script>

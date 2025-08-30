@@ -139,6 +139,12 @@ class ExpensesController extends Controller
             //expenses_category_id
             //expenses_vendor_id
 
+        //Validate
+        $request->validate([
+            'expenses_category_id' => ['required'],
+            'expenses_vendor_id' => ['required']
+        ]);
+
         $this->authChecker();
         $item = $this->provider::create([
             'date'=>$request->date,
@@ -179,11 +185,15 @@ class ExpensesController extends Controller
         }
 
         $fields = $this->getFields();
-        $fields[0]['value'] = $item->name;
-        $fields[1]['value'] = $item->code;
+        $fields[0]['value'] = $item->date;
+        $fields[1]['value'] = $item->amount;
+        $fields[2]['value'] = $item->reference;
+        $fields[3]['value'] = $item->expenses_category_id;
+        $fields[4]['value'] = $item->expenses_vendor_id;
 
         $parameter = [];
         $parameter[$this->parameter_name] = $id;
+
 
         return view('general.form', ['setup' => [
             'inrow'=>true,
@@ -208,8 +218,18 @@ class ExpensesController extends Controller
     {
         $this->authChecker();
         $item = $this->provider::findOrFail($id);
-        $item->name = $request->name;
-        $item->code = $request->code;
+
+        //Validate
+        $request->validate([
+            'expenses_category_id' => ['required'],
+            'expenses_vendor_id' => ['required']
+        ]);
+
+        $item->date = $request->date;
+        $item->amount = $request->amount;
+        $item->reference = $request->reference;
+        $item->expenses_category_id = $request->expenses_category_id;
+        $item->expenses_vendor_id = $request->expenses_vendor_id;
         $item->update();
 
         return redirect()->route($this->webroute_path.'index')->withStatus(__('crud.item_has_been_updated', ['item'=>__($this->title)]));

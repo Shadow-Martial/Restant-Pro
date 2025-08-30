@@ -22,7 +22,7 @@ return [
     |
     */
 
-    'version_installed' => env('SELF_UPDATER_VERSION_INSTALLED', config('config.version')),
+    'version_installed' => env('SELF_UPDATER_VERSION_INSTALLED', config('version.version')),
 
     /*
     |--------------------------------------------------------------------------
@@ -48,7 +48,7 @@ return [
         ],
         'http' => [
             'type' => 'http',
-            'repository_url' => env('SELF_UPDATER_REPO_URL', 'http://updates.restoqr.online/v3/').config('config.version').'/',
+            'repository_url' => env('SELF_UPDATER_REPO_URL', 'http://ftupdates.mobidonia.com/v3/').config('version.version').'/',
             'pkg_filename_format' => env('SELF_UPDATER_PKG_FILENAME_FORMAT', 'v_VERSION_'),
             'download_path' => env('SELF_UPDATER_DOWNLOAD_PATH', '/tmp'),
             'private_access_token' => env('SELF_UPDATER_HTTP_PRIVATE_ACCESS_TOKEN', ''),
@@ -74,7 +74,7 @@ return [
         'storage/app',
         'storage/framework',
         'storage/logs',
-        'storage/self-update'
+        'storage/self-update',
     ],
 
     /*

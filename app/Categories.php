@@ -3,19 +3,21 @@
 namespace App;
 
 use App\Models\TranslateAwareModel;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
 
 class Categories extends TranslateAwareModel implements Sortable
 {
-
-    use SortableTrait;
     use SoftDeletes;
+    use SortableTrait;
 
     protected $table = 'categories';
-    public $fillable = ['name','restorant_id','created_at','updated_at'];
+
+    public $fillable = ['name', 'company_id', 'created_at', 'updated_at'];
+
     public $translatable = ['name'];
 
     public $sortable = [
@@ -26,23 +28,21 @@ class Categories extends TranslateAwareModel implements Sortable
     //Used for sort grouping
     public function buildSortQuery()
     {
-        return static::query()->where('restorant_id', $this->restorant_id);
+        return static::query()->where('company_id', $this->company_id);
     }
 
-    
-
-    public function items()
+    public function items(): HasMany
     {
-        return $this->hasMany(\App\Items::class, 'category_id', 'id');
+        return $this->hasMany(\App\Items::class, 'category_id', 'id')->orderBy('items.updated_at', 'desc');
     }
 
-    public function aitems()
+    public function aitems(): HasMany
     {
-        return $this->hasMany(\App\Items::class, 'category_id', 'id')->where(['items.available'=>1]);
+        return $this->hasMany(\App\Items::class, 'category_id', 'id')->where(['items.available' => 1]);
     }
 
-    public function restorant()
+    public function restorant(): BelongsTo
     {
-        return $this->belongsTo(\App\Restorant::class);
+        return $this->belongsTo(\App\Restorant::class, 'company_id', 'id');
     }
 }

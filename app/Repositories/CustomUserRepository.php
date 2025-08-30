@@ -5,7 +5,6 @@ namespace App\Repositories;
 use App\Models\MyAuth0User;
 use App\User;
 use Auth0\Login\Auth0JWTUser;
-use Auth0\Login\Auth0User;
 use Auth0\Login\Repository\Auth0UserRepository;
 use Illuminate\Contracts\Auth\Authenticatable;
 
@@ -14,11 +13,9 @@ class CustomUserRepository extends Auth0UserRepository
     /**
      * Get an existing user or create a new one.
      *
-     * @param array $profile - Auth0 profile
-     *
-     * @return User
+     * @param  array  $profile - Auth0 profile
      */
-    protected function upsertUser($profile)
+    protected function upsertUser(array $profile): User
     {
         return User::firstOrCreate(
             ['email' => $profile['email']],
@@ -31,9 +28,7 @@ class CustomUserRepository extends Auth0UserRepository
     /**
      * Authenticate a user with a decoded ID Token.
      *
-     * @param object $jwt
-     *
-     * @return Auth0JWTUser
+     * @param  object  $jwt
      */
     public function getUserByDecodedJWT(array $decodedJwt): Authenticatable
     {
@@ -44,10 +39,6 @@ class CustomUserRepository extends Auth0UserRepository
 
     /**
      * Get a User from the database using Auth0 profile information.
-     *
-     * @param array $userinfo
-     *
-     * @return MyAuth0User
      */
     public function getUserByUserInfo(array $userinfo): Authenticatable
     {

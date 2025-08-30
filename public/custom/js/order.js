@@ -56,6 +56,11 @@ function loadExtras(variant_id){
                         $('#exrtas-area-inside').append('<div class="custom-control custom-checkbox mb-3"><input onclick="recalculatePrice('+element.item_id+');" class="custom-control-input" id="'+element.id+'" name="extra"  value="'+element.price+'" type="checkbox"><label class="custom-control-label" for="'+element.id+'">'+element.name+'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+'+formatPrice(element.price)+'</label></div>');
                     });
                     $('#exrtas-area').show();
+                    if(response.data.length>0){
+                        $('#theExtrasLabel').show();
+                    }else{
+                        $('#theExtrasLabel').hide();
+                    }
 
                 }
             }, error: function (response) {
@@ -74,6 +79,8 @@ function setSelectedVariant(element){
 
     $('#modalPrice').html(formatPrice(element.price));
 
+    console.log("Set selected variant",element);
+
     //Set current item price
     currentItemSelectedPrice=element.price;
 
@@ -86,6 +93,14 @@ function setSelectedVariant(element){
     //Empty the extras, and call it
     $('#exrtas-area-inside').empty();
     loadExtras(variantID);
+
+    if(element.enable_qty){
+        currentItem.qty=element.qty;
+    }else{
+        currentItem.qty=100;
+    }
+
+   
 
 }
 
@@ -240,6 +255,9 @@ function setCurrentItem(id){
 
 
     var item=items[id];
+    console.log("---- ITEM ----");  
+    console.log(item); 
+    
     currentItem=item;
     previouslySelected=[];
     $('#modalTitle').text(item.name);
@@ -294,7 +312,7 @@ function setCurrentItem(id){
 
     variantID=null;
 
-    //Now set the extrast
+    //Now set the extras
     if(item.extras.length==0||item.has_variants){
         
         $('#exrtas-area-inside').empty();
@@ -363,6 +381,13 @@ function initializeMarker(lat, lng){
     });
 }
 
+function showInitProduct(){
+    if(PID!="" && PID!=null && PID!=undefined){
+        setCurrentItem(PID);
+    }
+}
+
+
 var start = "/images/pin.png"
 var area = "/images/green_pin.png"
 var map_location = null;
@@ -396,7 +421,11 @@ window.onload = function () {
             }
         }
     });
+
+    showInitProduct();
 }
+
+
 
 
 

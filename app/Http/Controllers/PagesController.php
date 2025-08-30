@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Pages;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class PagesController extends Controller
 {
@@ -41,17 +44,14 @@ class PagesController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $page = new Pages;
         $page->title = strip_tags($request->title);
         $page->content = $request->input('ckeditor');
-        if(!$page->content){
-            $page->content="";
+        if (! $page->content) {
+            $page->content = '';
         }
 
         $page->save();
@@ -63,14 +63,13 @@ class PagesController extends Controller
      * Display the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function show(Pages $page)
+    public function show(Pages $page): View
     {
         return view('pages.show', ['page' => $page]);
     }
 
-    public function blog($slug)
+    public function blog($slug): View
     {
         $pages = Pages::where('id', '>', 0)->get();
         foreach ($pages as $key => $page) {
@@ -100,11 +99,9 @@ class PagesController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Pages $page)
+    public function update(Request $request, Pages $page): RedirectResponse
     {
         $page->title = strip_tags($request->title);
         $page->content = $request->input('ckeditor');
@@ -118,16 +115,15 @@ class PagesController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function destroy(Pages $page)
+    public function destroy(Pages $page): RedirectResponse
     {
         $page->delete();
 
         return redirect()->route('pages.index')->withStatus(__('Page successfully deleted!'));
     }
 
-    public function change(Pages $page, Request $request)
+    public function change(Pages $page, Request $request): JsonResponse
     {
         $page->showAsLink = $request->value;
         $page->update();
@@ -141,10 +137,10 @@ class PagesController extends Controller
         ]);
     }
 
-    public function getPages()
+    public function getPages(): JsonResponse
     {
         return response()->json([
-            'data' => Pages::where(['showAsLink'=>1])->get(),
+            'data' => Pages::where(['showAsLink' => 1])->get(),
         ]);
     }
 }

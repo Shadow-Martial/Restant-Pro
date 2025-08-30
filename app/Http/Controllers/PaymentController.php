@@ -4,16 +4,14 @@ namespace App\Http\Controllers;
 
 use Akaunting\Module\Facade as Module;
 use App\Order;
-
 use Cart;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-
-
-
+use Illuminate\View\View;
 
 class PaymentController extends Controller
 {
-    public function view(Request $request)
+    public function view(Request $request): View
     {
         $total = Money(Cart::getSubTotal(), config('settings.cashier_currency'), config('settings.do_convertion'))->format();
 
@@ -25,46 +23,50 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function handleOrderPaymentStripe(Request $request,Order $order){
-        if($request->success.""=="true"){
+    public function handleOrderPaymentStripe(Request $request, Order $order): RedirectResponse
+    {
+        if ($request->success.'' == 'true') {
             $order->payment_status = 'paid';
             $order->update();
+
             return redirect()->route('order.success', ['order' => $order]);
-        }else{
-            return redirect()->route('vendor',$order->restorant->subdomain)->withMesswithErrorage($request->message)->withInput();
+        } else {
+            return redirect()->route('vendor', $order->restorant->subdomain)->withMesswithErrorage($request->message)->withInput();
         }
     }
 
-    public function selectPaymentGateway(Order $order){
-        $paymentMethods=[];
+    public function selectPaymentGateway(Order $order): View
+    {
+        $paymentMethods = [];
 
-        $vendor=$order->restorant;
+        $vendor = $order->restorant;
 
-            //Payment methods
-            foreach (Module::all() as $key => $module) {
-                if($module->get('isPaymentModule')){
-                    if($vendor->getConfig($module->get('alias')."_enable","false")=="true"){
-                        $vendorHasOwnPayment=$module->get('alias');
-                        $paymentMethods[$module->get('alias')]=ucfirst($module->get('alias'));
-                    }
+        //Payment methods
+        foreach (Module::all() as $key => $module) {
+            if ($module->get('isPaymentModule')) {
+                if ($vendor->getConfig($module->get('alias').'_enable', 'false') == 'true') {
+                    $vendorHasOwnPayment = $module->get('alias');
+                    $paymentMethods[$module->get('alias')] = ucfirst($module->get('alias'));
                 }
             }
-        return view('orders.multypay', 
-        [
-            'paymentMethods'=>$paymentMethods,
-            'order' => $order,
-            'showWhatsApp'=>false,
-            'whatsappurl'=>''
-        ]);
+        }
+
+        return view('orders.multypay',
+            [
+                'paymentMethods' => $paymentMethods,
+                'order' => $order,
+                'showWhatsApp' => false,
+                'whatsappurl' => '',
+            ]);
     }
 
-    public function selectedPaymentGateway(Order $order,$paymentMethod){
-        $order->payment_method=$paymentMethod;
+    public function selectedPaymentGateway(Order $order, $paymentMethod): RedirectResponse
+    {
+        $order->payment_method = $paymentMethod;
         $className = '\Modules\\'.ucfirst($paymentMethod).'\Http\Controllers\App';
         $ref = new \ReflectionClass($className);
-        $ref->newInstanceArgs(array($order,$order->restorant))->execute();
-        return redirect()->route('order.success', ['order' => $order,'redirectToPayment'=>true]);
-    }
+        $ref->newInstanceArgs([$order, $order->restorant])->execute();
 
-    
+        return redirect()->route('order.success', ['order' => $order, 'redirectToPayment' => true]);
+    }
 }

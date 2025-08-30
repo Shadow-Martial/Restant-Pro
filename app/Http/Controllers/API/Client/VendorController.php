@@ -2,29 +2,27 @@
 
 namespace App\Http\Controllers\API\Client;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\City;
-use App\Restorant as Restaurant;
 use App\Address;
+use App\City;
+use App\Http\Controllers\Controller;
+use App\Restorant as Restaurant;
+use Illuminate\Http\JsonResponse;
 
 class VendorController extends Controller
 {
-    public function getCities()
+    public function getCities(): JsonResponse
     {
         $cities = City::where('id', '>', 0)->get()->toArray();
-        foreach ( $cities as $key => &$city) {
-           
-            if (!(strpos($city['logo'], 'http') !== false)) {
-                $city['logo']=config('app.url').$city['logo'];
+        foreach ($cities as $key => &$city) {
+
+            if (! (strpos($city['logo'], 'http') !== false)) {
+                $city['logo'] = config('app.url').$city['logo'];
             }
         }
 
-
-
         if ($cities) {
             return response()->json([
-                'data' =>$cities,
+                'data' => $cities,
                 'status' => true,
                 'errMsg' => '',
             ]);
@@ -36,12 +34,12 @@ class VendorController extends Controller
         }
     }
 
-    public function getVendors($city_id = 'none')
+    public function getVendors($city_id = 'none'): JsonResponse
     {
         if ($city_id == 'none') {
-            $restaurants = Restaurant::where(['active'=>1])->get();
+            $restaurants = Restaurant::where(['active' => 1])->get();
         } else {
-            $restaurants = Restaurant::where(['active'=>1])->where(['city_id'=>$city_id])->get();
+            $restaurants = Restaurant::where(['active' => 1])->where(['city_id' => $city_id])->get();
         }
 
         if ($restaurants) {
@@ -58,7 +56,7 @@ class VendorController extends Controller
         }
     }
 
-    public function getVendorItems($id)
+    public function getVendorItems($id): JsonResponse
     {
         $restorant = Restaurant::where(['id' => $id, 'active' => 1])->with(['categories.items.variants.extras'])->first();
         $items = [];
@@ -97,9 +95,9 @@ class VendorController extends Controller
         }
     }
 
-    public function getVendorHours($restorantID)
+    public function getVendorHours($restorantID): JsonResponse
     {
-        
+
         //Create all the time slots
         //The restaurant
         $restaurant = Restaurant::findOrFail($restorantID);
@@ -109,7 +107,7 @@ class VendorController extends Controller
         //Modified time slots for app
         $timeSlotsForApp = [];
         foreach ($timeSlots as $key => $timeSlotsTitle) {
-            array_push($timeSlotsForApp, ['id'=>$key, 'title'=>$timeSlotsTitle]);
+            array_push($timeSlotsForApp, ['id' => $key, 'title' => $timeSlotsTitle]);
         }
 
         //Working hours
@@ -120,19 +118,18 @@ class VendorController extends Controller
             $format = 'g:i A';
         }
 
-        $businessHours=$restaurant->getBusinessHours();
+        $businessHours = $restaurant->getBusinessHours();
         $now = new \DateTime('now');
 
         $formatter = new \IntlDateFormatter(config('app.locale'), \IntlDateFormatter::SHORT, \IntlDateFormatter::SHORT);
         $formatter->setPattern(config('settings.datetime_workinghours_display_format_new'));
 
-
         $params = [
             'restorant' => $restaurant,
             'timeSlots' => $timeSlotsForApp,
-            'openingTime' => $businessHours->isClosed()?$formatter->format($businessHours->nextOpen($now)):null,
-            'closingTime' => $businessHours->isOpen()?$formatter->format($businessHours->nextClose($now)):null,
-         ];
+            'openingTime' => $businessHours->isClosed() ? $formatter->format($businessHours->nextOpen($now)) : null,
+            'closingTime' => $businessHours->isOpen() ? $formatter->format($businessHours->nextClose($now)) : null,
+        ];
 
         if ($restaurant) {
             return response()->json([
@@ -148,15 +145,16 @@ class VendorController extends Controller
         }
     }
 
-    public function getDeliveryFee($restaurant_id, $address_id)
+    public function getDeliveryFee($restaurant_id, $address_id): JsonResponse
     {
         $restaurant = Restaurant::findOrFail($restaurant_id);
         $addresss = Address::findOrFail($address_id);
         $addresses = $this->getAccessibleAddresses($restaurant, [$addresss]);
+
         return response()->json([
             'fee' => $addresses[$address_id]->cost_total,
             'inRadius' => $addresses[$address_id]->inRadius,
-            'address'=>$addresses[$address_id],
+            'address' => $addresses[$address_id],
             'status' => true,
             'errMsg' => '',
         ]);

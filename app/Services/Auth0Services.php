@@ -23,9 +23,9 @@ class Auth0Services
                     'email_verified' => true,
                     'connection' => config('settings.auth_connection'),
                 ]);
-                array_push($results, ['user'=>$user, 'message'=>'Created']);
+                array_push($results, ['user' => $user, 'message' => 'Created']);
             } catch (\Throwable $th) {
-                array_push($results, ['user'=>$user, 'message'=>'Error on calling Auth0 or user already exists']);
+                array_push($results, ['user' => $user, 'message' => 'Error on calling Auth0 or user already exists']);
             }
         }
 

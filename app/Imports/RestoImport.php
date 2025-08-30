@@ -2,14 +2,15 @@
 
 namespace App\Imports;
 
+use App\Events\NewVendor;
 use App\Restorant;
 use App\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Spatie\Permission\Models\Role;
-use App\Events\NewVendor;
 
 class RestoImport implements ToModel, WithHeadingRow
 {
@@ -26,12 +27,7 @@ class RestoImport implements ToModel, WithHeadingRow
         return strtolower(preg_replace('/[^A-Za-z0-9]/', '', $name));
     }
 
-    /**
-     * @param array $row
-     *
-     * @return \Illuminate\Database\Eloquent\Model|null
-     */
-    public function model(array $row)
+    public function model(array $row): ?Model
     {
         //Create the user
         $owner = new User;
@@ -46,7 +42,7 @@ class RestoImport implements ToModel, WithHeadingRow
         //Assign role
         $owner->assignRole('owner');
 
-        $restaurant=new Restorant([
+        $restaurant = new Restorant([
             'name' => $row['name'],
             'description' => $row['description'].'',
             'subdomain' => $this->createSubdomainFromName($row['name']),
@@ -55,11 +51,11 @@ class RestoImport implements ToModel, WithHeadingRow
             'lng' => 21.44,
             'address' => $row['address'],
             'phone' => $row['restaurant_phone'],
-            'logo' => $row['logo']
+            'logo' => $row['logo'],
         ]);
 
-         //Fire event
-         NewVendor::dispatch($restaurant->user,$restaurant);
+        //Fire event
+        NewVendor::dispatch($restaurant->user, $restaurant);
 
         return $restaurant;
     }

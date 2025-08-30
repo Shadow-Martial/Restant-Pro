@@ -3,23 +3,25 @@
 namespace App\Http\Controllers\API\Client;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    public function getToken(Request $request)
+    public function getToken(Request $request): JsonResponse
     {
-        $user = User::where(['active'=>1, 'email'=>$request->email])->first();
+        $user = User::where(['active' => 1, 'email' => $request->email])->first();
         if ($user != null) {
             if (Hash::check($request->password, $user->password)) {
                 if ($user->hasRole(['client'])) {
-                    if( $request->has('expotoken')){
+                    if ($request->has('expotoken')) {
                         $user->setExpoToken($request->expotoken);
                     }
+
                     return response()->json([
                         'status' => true,
                         'token' => $user->api_token,
@@ -47,111 +49,107 @@ class AuthController extends Controller
         }
     }
 
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
-        
-            $validator = Validator::make($request->all(), [
-                'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'email', 'unique:users', 'max:255'],
-                'phone' => ['required', 'string'],
-                'password' => ['required', 'string', 'min:8'],
-                'app_secret'=>['required', 'string'],
+
+        $validator = Validator::make($request->all(), [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'unique:users', 'max:255'],
+            'phone' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8'],
+            'app_secret' => ['required', 'string'],
+        ]);
+
+        if (! $validator->fails()) {
+
+            if (config('settings.app_secret') == null || config('settings.app_secret').'' != $request->app_secret) {
+                return response()->json([
+                    'status' => false,
+                    'errMsg' => ['app_secret' => __('App secret is incorrectly set')],
+                ]);
+            }
+            $client = new User;
+
+            $client->name = $request->name;
+            $client->email = $request->email;
+            $client->phone = $request->phone;
+            $client->password = Hash::make($request->password);
+            $client->api_token = Str::random(80);
+            $client->save();
+
+            //Assign role
+            $client->assignRole('client');
+
+            if ($request->has('expotoken')) {
+                $client->setExpoToken($request->expotoken);
+            }
+
+            return response()->json([
+                'status' => true,
+                'token' => $client->api_token,
+                'id' => $client->id,
             ]);
-            
-            
+        } else {
+            return response()->json([
+                'status' => false,
+                'errMsg' => $validator->errors(),
+            ]);
+        }
 
-            if (!$validator->fails()) {
-                
-                if(config('settings.app_secret')==null||config('settings.app_secret').""!=$request->app_secret){
-                     return response()->json([
-                        'status' => false,
-                        'errMsg' => ['app_secret'=>__("App secret is incorrectly set")],
-                    ]);
-                }
+    }
+
+    public function loginFacebook(Request $request): JsonResponse
+    {
+
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'fb_id' => ['required', 'string'],
+        ]);
+
+        if (! $validator->fails()) {
+            $client = User::where('email', $request->email)->first();
+
+            if (! $client) {
                 $client = new User;
-
+                $client->fb_id = $request->fb_id;
                 $client->name = $request->name;
                 $client->email = $request->email;
-                $client->phone = $request->phone;
-                $client->password = Hash::make($request->password);
                 $client->api_token = Str::random(80);
                 $client->save();
 
-                //Assign role
                 $client->assignRole('client');
-
-                if( $request->has('expotoken')){
-                    $client->setExpoToken($request->expotoken);
-                }
-
-                return response()->json([
-                    'status' => true,
-                    'token' => $client->api_token,
-                    'id' => $client->id,
-                ]);
             } else {
-                return response()->json([
-                    'status' => false,
-                    'errMsg' => $validator->errors(),
-                ]);
-            }
-        
-    }
-
-    public function loginFacebook(Request $request)
-    {
-
-            $validator = Validator::make($request->all(), [
-                'email' => ['required', 'string', 'email', 'max:255'],
-                'fb_id'=>['required', 'string']
-            ]);
-
-            if (!$validator->fails()) {
-                $client = User::where('email', $request->email)->first();
-
-                if (! $client) {
-                    $client = new User;
+                if (empty($client->fb_id)) {
                     $client->fb_id = $request->fb_id;
-                    $client->name = $request->name;
-                    $client->email = $request->email;
-                    $client->api_token = Str::random(80);
-                    $client->save();
-
-                    $client->assignRole('client');
-                } else {
-                    if (empty($client->fb_id)) {
-                        $client->fb_id = $request->fb_id;
-                    }
-
-                    $client->update();
                 }
 
-                return response()->json([
-                    'status' => true,
-                    'token' => $client->api_token,
-                    'id' => $client->id,
-                    'msg' => 'Client logged in!',
-                ]);
-
-            }else{
-                return response()->json([
-                    'status' => false,
-                    'errMsg' => $validator->errors(),
-                ]);
+                $client->update();
             }
 
-            
-        
+            return response()->json([
+                'status' => true,
+                'token' => $client->api_token,
+                'id' => $client->id,
+                'msg' => 'Client logged in!',
+            ]);
+
+        } else {
+            return response()->json([
+                'status' => false,
+                'errMsg' => $validator->errors(),
+            ]);
+        }
+
     }
 
-    public function loginGoogle(Request $request)
+    public function loginGoogle(Request $request): JsonResponse
     {
-       
-            $validator = Validator::make($request->all(), [
-                'email' => ['required', 'string', 'email', 'max:255'],
-                'google_id'=>['required', 'string']
-            ]);
-        if(!$validator->fails()){
+
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'google_id' => ['required', 'string'],
+        ]);
+        if (! $validator->fails()) {
             $client = User::where('email', $request->email)->first();
 
             if (! $client) {
@@ -184,8 +182,8 @@ class AuthController extends Controller
             ]);
         }
     }
-  
-    public function getUseData()
+
+    public function getUseData(): JsonResponse
     {
         $user = User::where(['api_token' => $_GET['api_token']])->first();
 
@@ -209,8 +207,8 @@ class AuthController extends Controller
 
     public function deactivate()
     {
-        $user=User::where(['api_token' => $_GET['api_token']])->first();
-        
+        $user = User::where(['api_token' => $_GET['api_token']])->first();
+
         if ($user) {
             $user->working = 0;
             $user->active = 0;
@@ -218,9 +216,9 @@ class AuthController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => __('User deactivated')
+                'message' => __('User deactivated'),
             ]);
-        }else{
+        } else {
             return $this->invalidResponse();
         }
     }

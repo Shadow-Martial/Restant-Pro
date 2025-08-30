@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Testimonials;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class TestimonialsController extends Controller
 {
@@ -19,18 +21,17 @@ class TestimonialsController extends Controller
     private function getFields()
     {
         return [
-            ['ftype'=>'image', 'name'=>__('Author image ( 48x48 )'), 'id'=>'image'],
-            ['ftype'=>'input', 'name'=>'Author', 'id'=>'title', 'placeholder'=>__('Enter author name'), 'required'=>true],
-            ['ftype'=>'input', 'name'=>'Description', 'id'=>'subtitle', 'placeholder'=>__('Enter short description'), 'required'=>true],
-            ['ftype'=>'input', 'name'=>'Comment', 'id'=>'description', 'placeholder'=>__('Enter testimonial comment'), 'required'=>true],
+            ['ftype' => 'image', 'name' => __('Author image ( 48x48 )'), 'id' => 'image'],
+            ['ftype' => 'input', 'name' => 'Author', 'id' => 'title', 'placeholder' => __('Enter author name'), 'required' => true],
+            ['ftype' => 'input', 'name' => 'Description', 'id' => 'subtitle', 'placeholder' => __('Enter short description'), 'required' => true],
+            ['ftype' => 'input', 'name' => 'Comment', 'id' => 'description', 'placeholder' => __('Enter testimonial comment'), 'required' => true],
         ];
     }
+
     /**
      * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(): View
     {
         $this->validateAccess();
 
@@ -50,10 +51,8 @@ class TestimonialsController extends Controller
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(): View
     {
         $this->validateAccess();
 
@@ -69,16 +68,13 @@ class TestimonialsController extends Controller
                 [__('New'), null],
             ],
         ],
-        'fields'=>$this->getFields(), ]);
+            'fields' => $this->getFields(), ]);
     }
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $this->validateAccess();
         //Validate first
@@ -93,7 +89,7 @@ class TestimonialsController extends Controller
             'title' => $request->title,
             'subtitle' => $request->subtitle,
             'description' => $request->description,
-            'image'=>'',
+            'image' => '',
         ]);
 
         $testimonial->save();
@@ -103,7 +99,7 @@ class TestimonialsController extends Controller
                 $this->imagePath,
                 $request->image,
                 [
-                    ['name'=>'large', 'w'=>48, 'h'=>48],
+                    ['name' => 'large', 'w' => 48, 'h' => 48],
                 ]
             );
             $testimonial->update();
@@ -115,7 +111,6 @@ class TestimonialsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Testimonials  $testimonials
      * @return \Illuminate\Http\Response
      */
     public function show(Testimonials $testimonials)
@@ -127,9 +122,8 @@ class TestimonialsController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\Testimonials  $testimonials
-     * @return \Illuminate\Http\Response
      */
-    public function edit(Testimonials $testimonial)
+    public function edit(Testimonials $testimonial): View
     {
         $this->validateAccess();
         $fields = $this->getFields();
@@ -151,17 +145,15 @@ class TestimonialsController extends Controller
                 [$testimonial->id, null],
             ],
         ],
-        'fields'=>$fields, ]);
+            'fields' => $fields, ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Testimonials  $testimonials
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Testimonials $testimonial)
+    public function update(Request $request, Testimonials $testimonial): RedirectResponse
     {
         $this->validateAccess();
 
@@ -174,7 +166,7 @@ class TestimonialsController extends Controller
                 $this->imagePath,
                 $request->image,
                 [
-                    ['name'=>'large', 'w'=>48, 'h'=>48],
+                    ['name' => 'large', 'w' => 48, 'h' => 48],
                 ]
             );
         }
@@ -188,9 +180,8 @@ class TestimonialsController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Testimonials  $testimonials
-     * @return \Illuminate\Http\Response
      */
-    public function destroy(Testimonials $testimonial)
+    public function destroy(Testimonials $testimonial): RedirectResponse
     {
         $this->validateAccess();
 

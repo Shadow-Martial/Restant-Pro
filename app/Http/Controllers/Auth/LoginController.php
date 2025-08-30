@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Restorant;
 use App\User;
 use Auth;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
@@ -45,25 +45,25 @@ class LoginController extends Controller
 
     public function redirectTo()
     {
-        $lastVendor=session('last_visited_restaurant_alias',null);
-        if($lastVendor&&auth()->user()->hasRole('client')){
-            return route('vendrobyalias',['alias'=>$lastVendor]);
-        }else{
+        $lastVendor = session('last_visited_restaurant_alias', null);
+        if ($lastVendor && auth()->user()->hasRole('client')) {
+            return route('vendrobyalias', ['alias' => $lastVendor]);
+        } else {
             return route('home');
         }
-        
+
     }
 
     public function logout(Request $request)
     {
-        
-        $isClient=auth()->user()->hasRole('client');
-        $lastVendor=session('last_visited_restaurant_alias',null);
+
+        $isClient = auth()->user()->hasRole('client');
+        $lastVendor = session('last_visited_restaurant_alias', null);
         $this->guard()->logout();
         $request->session()->invalidate();
-        if($lastVendor&&$isClient){
-            return redirect(route('vendrobyalias',['alias'=>$lastVendor]));
-        }else{
+        if ($lastVendor && $isClient) {
+            return redirect(route('vendrobyalias', ['alias' => $lastVendor]));
+        } else {
             return $this->loggedOut($request) ?: redirect('/');
         }
     }
@@ -75,10 +75,8 @@ class LoginController extends Controller
 
     /**
      * Obtain the user information from Google.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function googleHandleProviderCallback()
+    public function googleHandleProviderCallback(): RedirectResponse
     {
         $user_google = Socialite::driver('google')->stateless()->user();
         $user = User::where('email', $user_google->email)->first();
@@ -112,10 +110,8 @@ class LoginController extends Controller
 
     /**
      * Obtain the user information from Google.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function facebookHandleProviderCallback()
+    public function facebookHandleProviderCallback(): RedirectResponse
     {
         $user_facebook = Socialite::driver('facebook')->stateless()->user();
         $user = User::where('email', $user_facebook->email)->first();

@@ -3,9 +3,9 @@
 namespace App\Notifications;
 
 use Akaunting\Money\Currency;
-use Akaunting\Money\Money;
+use App\NotificationChannels\Expo\ExpoChannel;
+use App\NotificationChannels\Expo\ExpoMessage;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\OneSignal\OneSignalChannel;
@@ -13,8 +13,6 @@ use NotificationChannels\OneSignal\OneSignalMessage;
 use NotificationChannels\OneSignal\OneSignalWebButton;
 use NotificationChannels\Twilio\TwilioChannel;
 use NotificationChannels\Twilio\TwilioSmsMessage;
-use App\NotificationChannels\Expo\ExpoChannel;
-use App\NotificationChannels\Expo\ExpoMessage;
 
 class OrderNotification extends Notification
 {
@@ -26,10 +24,12 @@ class OrderNotification extends Notification
      * @return void
      */
     protected $order;
+
     protected $status;
+
     protected $user;
 
-    public function __construct($order, $status = '1',$user=null)
+    public function __construct($order, $status = '1', $user = null)
     {
         $this->order = $order;
         $this->status = $status;
@@ -40,16 +40,15 @@ class OrderNotification extends Notification
      * Get the notification's delivery channels.
      *
      * @param  mixed  $notifiable
-     * @return array
      */
-    public function via($notifiable)
+    public function via($notifiable): array
     {
         $notificationClasses = ['database'];
-        
+
         //Mail notification on vendor email
-        if($this->order->restorant->getConfig('enable_email_order_notification',false)){
+        if ($this->order->restorant->getConfig('enable_email_order_notification', false)) {
             array_push($notificationClasses, 'mail');
-        }else if(config('settings.send_order_email_to_vendor',false)){
+        } elseif (config('settings.send_order_email_to_vendor', false)) {
             array_push($notificationClasses, 'mail');
         }
 
@@ -57,37 +56,38 @@ class OrderNotification extends Notification
             array_push($notificationClasses, OneSignalChannel::class);
         }
         if (config('settings.twilio_account_sid') && config('settings.send_sms_notifications')) {
-            if( $this->order->client&&strlen($this->order->client->phone)>4){
+            if ($this->order->client && strlen($this->order->client->phone) > 4) {
                 array_push($notificationClasses, TwilioChannel::class);
             }
         }
-        if($this->user!=null&&strlen($this->user->expotoken)>3){
-            array_push($notificationClasses,ExpoChannel::class);  
+        if ($this->user != null && strlen($this->user->expotoken) > 3) {
+            array_push($notificationClasses, ExpoChannel::class);
         }
+
         return $notificationClasses;
     }
 
     public function toExpo($notifiable)
     {
-        $messages=$this->getMessages();
-        $greeting=$messages[0];
-        $line=$messages[1];
+        $messages = $this->getMessages();
+        $greeting = $messages[0];
+        $line = $messages[1];
         try {
             return ExpoMessage::create()
-            ->title($greeting)
-            ->body($line)
-            ->badge(1);
+                ->title($greeting)
+                ->body($line)
+                ->badge(1);
         } catch (\Throwable $th) {
             //throw $th;
         }
-        
+
     }
 
     public function toTwilio($notifiable)
     {
         if ($this->status.'' == '1') {
             //Created
-             $line = $this->order->delivery_method.'' == '3'? __('You have just received an order on table').' '.$this->order->table->name :  __('You have just received an order');
+            $line = $this->order->delivery_method.'' == '3' ? __('You have just received an order on table').' '.$this->order->table->name : __('You have just received an order');
         } elseif ($this->status.'' == '3') {
             //Accepted
             $line = __('Your order has been accepted. We are now working on it!');
@@ -105,11 +105,12 @@ class OrderNotification extends Notification
         return (new TwilioSmsMessage())->content($line);
     }
 
-    private function getMessages(){
+    private function getMessages()
+    {
         if ($this->status.'' == '1') {
             //Created
             $greeting = __('There is new order');
-            $line = $this->order->delivery_method.'' == '3'? __('You have just received an order on table').' '.$this->order->table->name :  __('You have just received an order');
+            $line = $this->order->delivery_method.'' == '3' ? __('You have just received an order on table').' '.$this->order->table->name : __('You have just received an order');
         } elseif ($this->status.'' == '3') {
             //Accepted
             $greeting = __('Your order has been accepted');
@@ -127,14 +128,15 @@ class OrderNotification extends Notification
             $greeting = __('Order rejected');
             $line = __('Unfortunately your order is rejected. There where issues with the order and we need to reject it. Pls contact us for more info.');
         }
-        return [$greeting." #".$this->order->id,$line];
+
+        return [$greeting.' #'.$this->order->id, $line];
     }
 
     public function toOneSignal($notifiable)
     {
-        $messages=$this->getMessages();
-        $greeting=$messages[0];
-        $line=$messages[1];
+        $messages = $this->getMessages();
+        $greeting = $messages[0];
+        $line = $messages[1];
 
         $url = url('/orders/'.$this->order->id);
 
@@ -156,17 +158,16 @@ class OrderNotification extends Notification
      * Get the mail representation of the notification.
      *
      * @param  mixed  $notifiable
-     * @return \Illuminate\Notifications\Messages\MailMessage
      */
-    public function toMail($notifiable)
+    public function toMail($notifiable): MailMessage
     {
         //Change currency
-        \App\Services\ConfChanger::switchCurrency( $this->order->restorant);
+        \App\Services\ConfChanger::switchCurrency($this->order->restorant);
 
         if ($this->status.'' == '1') {
             //Created
             $greeting = __('There is new order');
-            $line = $this->order->delivery_method.'' == '3'? __('You have just received an order on table').' '.$this->order->table->name :  __('You have just received an order');
+            $line = $this->order->delivery_method.'' == '3' ? __('You have just received an order on table').' '.$this->order->table->name : __('You have just received an order');
         } elseif ($this->status.'' == '3') {
             //Accepted
             $greeting = __('Your order has been accepted');
@@ -205,11 +206,11 @@ class OrderNotification extends Notification
             $message->line(__('Delivery').': '.money($this->order->delivery_price, config('settings.cashier_currency'), config('settings.do_convertion')));
         }
 
-        if ($this->order->discount>0) {
+        if ($this->order->discount > 0) {
             $message->line(__('Discount').': '.money($this->order->discount, config('settings.cashier_currency'), config('settings.do_convertion')));
         }
 
-        $message->line(__('Total').': '.money($this->order->order_price_with_discount+$this->order->delivery_price, config('settings.cashier_currency'), config('settings.do_convertion')));
+        $message->line(__('Total').': '.money($this->order->order_price_with_discount + $this->order->delivery_price, config('settings.cashier_currency'), config('settings.do_convertion')));
 
         return $message;
     }
@@ -218,11 +219,10 @@ class OrderNotification extends Notification
      * Get the array representation of the notification.
      *
      * @param  mixed  $notifiable
-     * @return array
      */
-    public function toArray($notifiable)
+    public function toArray($notifiable): array
     {
-        return [ ];
+        return [];
     }
 
     public function toDatabase($notifiable)
@@ -250,8 +250,8 @@ class OrderNotification extends Notification
         }
 
         return [
-            'title'=>$greeting,
-            'body' =>$line,
+            'title' => $greeting,
+            'body' => $line,
         ];
     }
 }

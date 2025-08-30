@@ -8,29 +8,33 @@
 
 namespace App\Repositories\Orders;
 
-use App\Models\SimpleDelivery;
-use Illuminate\Support\Facades\Validator;
 use Cart;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Validator;
 
 class LocalOrderRepository extends BaseOrderRepository implements OrderTypeInterface
 {
-    private $listOfOrders=null; //The list of order to go in the cookie
+    private $listOfOrders = null; //The list of order to go in the cookie
 
-    public function validateData(){
-        $validator=Validator::make($this->request->all(), array_merge($this->expeditionRules(),$this->paymentRules()));
-        if($validator->fails()){$this->status=false;}
+    public function validateData()
+    {
+        $validator = Validator::make($this->request->all(), array_merge($this->expeditionRules(), $this->paymentRules()));
+        if ($validator->fails()) {
+            $this->status = false;
+        }
+
         return $validator;
     }
 
-    public function makeOrder(){
+    public function makeOrder()
+    {
 
-        if(
-            $this->request->delivery_method=="dinein" && 
-            !config('settings.disable_continius_ordering') && 
-            !$this->vendor->getConfig('disable_continues_ordering',false) && 
-            $this->request->payment_method == 'cod' 
-        ){
+        if (
+            $this->request->delivery_method == 'dinein' &&
+            ! config('settings.disable_continius_ordering') &&
+            ! $this->vendor->getConfig('disable_continues_ordering', false) &&
+            $this->request->payment_method == 'cod'
+        ) {
             //When we have dine in and we have enabled continues ordering, and this is COD order, we can have previous orders to that table
             $this->findMePreviousOrder();
         }
@@ -43,87 +47,92 @@ class LocalOrderRepository extends BaseOrderRepository implements OrderTypeInter
         $this->setTimeSlot();
 
         //From parent - check if order is ok - min price. -- Only for pickup - dine in should not have minimum
-        if($this->request->delivery_method!="dinein"){
-            $resultFromValidateOrder=$this->validateOrder();
-            if($resultFromValidateOrder->fails()){return $resultFromValidateOrder;}
+        if ($this->request->delivery_method != 'dinein') {
+            $resultFromValidateOrder = $this->validateOrder();
+            if ($resultFromValidateOrder->fails()) {
+                return $resultFromValidateOrder;
+            }
         }
-        
-        
+
         //From trait - make attempt to pay order or get payment link
-        $resultFromPayOrder=$this->payOrder();
-        if($resultFromPayOrder->fails()){return $resultFromPayOrder;}
+        $resultFromPayOrder = $this->payOrder();
+        if ($resultFromPayOrder->fails()) {
+            return $resultFromPayOrder;
+        }
 
         //Local - set Initial Status
         $this->setInitialStatus();
 
-         //Local - clear cart
-         $this->clearCart();
+        //Local - clear cart
+        $this->clearCart();
 
-         //Local - Notify
-         $this->notify();
+        //Local - Notify
+        $this->notify();
 
-         //Local - Store order is session
-         $this->storeOrderInSession();
+        //Local - Store order is session
+        $this->storeOrderInSession();
 
         //At the end, return that all went ok
         return Validator::make([], []);
     }
 
-
-    
-    public function setInitialStatus(){
+    public function setInitialStatus()
+    {
         //Only if the order is new
-        if($this->isNewOrder){
+        if ($this->isNewOrder) {
             //Set the just created status
-            $this->order->status()->attach(1, ['user_id'=>$this->vendor->user->id, 'comment'=>'Local order']);
+            $this->order->status()->attach(1, ['user_id' => $this->vendor->user->id, 'comment' => 'Local order']);
 
             //Set automatically approved by admin - since it it qr
         }
-        
-        
+
     }
 
-    public function redirectOrInform(){
-        if($this->status){
-            if($this->paymentRedirect==null){
+    public function redirectOrInform()
+    {
+        if ($this->status) {
+            if ($this->paymentRedirect == null) {
                 //We don't have payment redirects
-                if($this->isNewOrder){
+                if ($this->isNewOrder) {
                     //New order - redirect to success page
                     return redirect()->route('order.success', ['order' => $this->order])->withCookie(cookie('orders', $this->listOfOrders, 360));
-                }else{
+                } else {
                     //Updated order - redirect to restaurant page
                     return redirect()
-                        ->route('vendor', ['alias'=>$this->vendor->subdomain])
+                        ->route('vendor', ['alias' => $this->vendor->subdomain])
                         ->withCookie(cookie('orders', $this->listOfOrders, 360))
-                        ->withStatus(__('Order updated.').' ID #'.$this->order->id);
+                        ->withStatus(__('Order updated.').' ID #'.$this->order->id_formated);
                 }
-                
-            }else{
+
+            } else {
                 //We have payment redirect
 
-                return redirect()->route('order.success', ['order' => $this->order,'redirectToPayment'=>true])->withCookie(cookie('orders', $this->listOfOrders, 360));
+                return redirect()->route('order.success', ['order' => $this->order, 'redirectToPayment' => true])->withCookie(cookie('orders', $this->listOfOrders, 360));
             }
-        }else{
+        } else {
             //There was some error, return back to the order page
             return redirect()->route('cart.checkout')->withInput();
         }
     }
 
-    private function clearCart(){
+    private function clearCart()
+    {
         Cart::clear();
     }
 
-    private function notify(){
+    private function notify()
+    {
         $this->notifyOwner();
     }
 
-    private function storeOrderInSession(){
+    private function storeOrderInSession()
+    {
         $previousOrders = Cookie::get('orders') ? Cookie::get('orders') : '';
         $previousOrderArray = array_filter(explode(',', $previousOrders));
-        if($this->isNewOrder){
+        if ($this->isNewOrder) {
             //New order
             array_push($previousOrderArray, $this->order->id);
-        }else{
+        } else {
             //Updated order
         }
         $this->listOfOrders = implode(',', $previousOrderArray);

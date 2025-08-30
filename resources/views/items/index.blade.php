@@ -98,7 +98,7 @@
 
                                         </script>
                                         @if($canAdd)
-                                            <button class="btn btn-icon btn-1 btn-sm btn-primary" type="button" data-toggle="modal" data-target="#modal-new-item" data-toggle="tooltip" data-placement="top" title="{{ __('Add item') }} in {{$category->name}}" onClick=(setSelectedCategoryId({{ $category->id }})) >
+                                            <button class="btn btn-icon btn-1 btn-sm btn-primary" type="button" data-toggle="modal" data-target="#modal-new-item" data-toggle="tooltip" data-placement="top" title="{{ __('Add item in') }} {{$category->name}}" onClick=(setSelectedCategoryId({{ $category->id }})) >
                                                 <span class="btn-inner--icon"><i class="fa fa-plus"></i></span>
                                             </button>
                                         @else

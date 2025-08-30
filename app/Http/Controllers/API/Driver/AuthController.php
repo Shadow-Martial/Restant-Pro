@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\API\Driver;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -16,13 +17,14 @@ class AuthController extends Controller
      */
     public function getToken(Request $request)
     {
-        $user = User::where(['active'=>1, 'email'=>$request->email])->first();
+        $user = User::where(['active' => 1, 'email' => $request->email])->first();
         if ($user != null) {
             if (Hash::check($request->password, $user->password)) {
                 if ($user->hasRole(['driver'])) {
-                    if( $request->has('expotoken')){
+                    if ($request->has('expotoken')) {
                         $user->setExpoToken($request->expotoken);
                     }
+
                     return response()->json([
                         'status' => true,
                         'token' => $user->api_token,
@@ -44,72 +46,69 @@ class AuthController extends Controller
         }
     }
 
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
-        
-            $validator = Validator::make($request->all(), [
-                'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'email', 'unique:users', 'max:255'],
-                'phone' => ['required', 'string'],
-                'password' => ['required', 'string', 'min:4'],
-                'app_secret'=>['required', 'string'] 
-            ]);
-            
-            
 
-            if (!$validator->fails()) {
-                
-                if(config('settings.app_secret')==null||config('settings.app_secret').""!=$request->app_secret){
-                     return response()->json([
-                        'status' => false,
-                        'errMsg' => ['app_secret'=>__("App secret is incorrectly set")],
-                    ]);
-                }
-                $driver = new User;
+        $validator = Validator::make($request->all(), [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'unique:users', 'max:255'],
+            'phone' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:4'],
+            'app_secret' => ['required', 'string'],
+        ]);
 
-                $driver->name = $request->name;
-                $driver->email = $request->email;
-                $driver->phone = $request->phone;
-                $driver->password = Hash::make($request->password);
-                $driver->api_token = Str::random(80);
-                $driver->active = 0; //Disabled by default
-                $driver->save();
+        if (! $validator->fails()) {
 
-                
-
-                //Assign role
-                $driver->assignRole('driver');
-
-                if( $request->has('expotoken')){
-                    $driver->setExpoToken($request->expotoken);
-                }
-
+            if (config('settings.app_secret') == null || config('settings.app_secret').'' != $request->app_secret) {
                 return response()->json([
                     'status' => false,
-                    'errMsg' => __("Driver account created. Please wait for a call from us to activate your account.")
-                ]);
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'errMsg' => $validator->errors(),
+                    'errMsg' => ['app_secret' => __('App secret is incorrectly set')],
                 ]);
             }
-        
+            $driver = new User;
+
+            $driver->name = $request->name;
+            $driver->email = $request->email;
+            $driver->phone = $request->phone;
+            $driver->password = Hash::make($request->password);
+            $driver->api_token = Str::random(80);
+            $driver->active = 0; //Disabled by default
+            $driver->save();
+
+            //Assign role
+            $driver->assignRole('driver');
+
+            if ($request->has('expotoken')) {
+                $driver->setExpoToken($request->expotoken);
+            }
+
+            return response()->json([
+                'status' => false,
+                'errMsg' => __('Driver account created. Please wait for a call from us to activate your account.'),
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'errMsg' => $validator->errors(),
+            ]);
+        }
+
     }
 
     /**
      * Return invalid user data
      */
-    private function invalidResponse($message='Driver not found!'){
+    private function invalidResponse($message = 'Driver not found!')
+    {
         return response()->json([
             'status' => false,
             'errMsg' => __($message),
         ]);
     }
 
-    public function goOffline()
+    public function goOffline(): JsonResponse
     {
-        $user=auth()->user();
+        $user = auth()->user();
         auth()->user()->working = 0;
         auth()->user()->update();
 
@@ -120,14 +119,14 @@ class AuthController extends Controller
                 'working' => $user->working,
                 'onorder' => $user->onorder,
                 'numorders' => $user->numorders,
-                'rejectedorders'=>$user->rejectedorders,
-            ]
+                'rejectedorders' => $user->rejectedorders,
+            ],
         ]);
     }
 
-    public function goOnline()
+    public function goOnline(): JsonResponse
     {
-        $user=auth()->user();
+        $user = auth()->user();
         auth()->user()->working = 1;
         auth()->user()->update();
 
@@ -138,15 +137,15 @@ class AuthController extends Controller
                 'working' => $user->working,
                 'onorder' => $user->onorder,
                 'numorders' => $user->numorders,
-                'rejectedorders'=>$user->rejectedorders,
-            ]
+                'rejectedorders' => $user->rejectedorders,
+            ],
         ]);
     }
 
     public function deactivate()
     {
-        $user=User::where(['api_token' => $_GET['api_token']])->first();
-        
+        $user = User::where(['api_token' => $_GET['api_token']])->first();
+
         if ($user) {
             $user->working = 0;
             $user->active = 0;
@@ -154,13 +153,13 @@ class AuthController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => __('User deactivated')
+                'message' => __('User deactivated'),
             ]);
-        }else{
+        } else {
             return $this->invalidResponse();
         }
     }
-  
+
     /**
      * Get driver data
      */
@@ -178,8 +177,8 @@ class AuthController extends Controller
                     'working' => $user->working,
                     'onorder' => $user->onorder,
                     'numorders' => $user->numorders,
-                    'rejectedorders'=>$user->rejectedorders,
-                ]
+                    'rejectedorders' => $user->rejectedorders,
+                ],
             ]);
         } else {
             return $this->invalidResponse();

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Akaunting\Module\Facade as Module;
 use App\RestoArea;
 use App\Tables;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Akaunting\Module\Facade as Module;
+use Illuminate\View\View;
 
 class TablesController extends Controller
 {
@@ -50,9 +52,9 @@ class TablesController extends Controller
     private function getFields()
     {
         return [
-            ['class'=>'col-md-4', 'ftype'=>'input', 'name'=>'Name', 'id'=>'name', 'placeholder'=>'Enter table name or internal id, ex Table 8', 'required'=>true],
-            ['class'=>'col-md-4', 'ftype'=>'input', 'type'=>'number', 'name'=>'Size', 'id'=>'size', 'placeholder'=>'Enter table person size, ex 4', 'required'=>true],
-            ['class'=>'col-md-4', 'ftype'=>'select', 'name'=>'Area', 'id'=>'restoarea_id', 'placeholder'=>'Selec rest area id', 'data'=>RestoArea::where('restaurant_id', $this->getRestaurant()->id)->pluck('name', 'id')->toArray(), 'required'=>false],
+            ['class' => 'col-md-4', 'ftype' => 'input', 'name' => 'Name', 'id' => 'name', 'placeholder' => 'Enter table name or internal id, ex Table 8', 'required' => true],
+            ['class' => 'col-md-4', 'ftype' => 'input', 'type' => 'number', 'name' => 'Size', 'id' => 'size', 'placeholder' => 'Enter table person size, ex 4', 'required' => true],
+            ['class' => 'col-md-4', 'ftype' => 'select', 'name' => 'Area', 'id' => 'restoarea_id', 'placeholder' => 'Selec rest area id', 'data' => RestoArea::where('restaurant_id', $this->getRestaurant()->id)->pluck('name', 'id')->toArray(), 'required' => false],
         ];
     }
 
@@ -66,74 +68,68 @@ class TablesController extends Controller
         $this->authChecker();
 
         //If we have the Floor Manager, we should use FlooPlan
-        if(Module::has('floorplan')){
-            if(!isset($_GET['do_not_redirect'])){
-                if(!isset($_GET['page'])){
+        if (Module::has('floorplan')) {
+            if (! isset($_GET['do_not_redirect'])) {
+                if (! isset($_GET['page'])) {
                     return redirect(route('admin.restaurant.restoareas.index'));
                 }
             }
-            
+
         }
 
         return view($this->view_path.'index', ['setup' => [
-            'title'=>__('crud.item_managment', ['item'=>__($this->titlePlural)]),
-            'action_link'=>route($this->webroute_path.'create'),
-            'action_name'=>__('crud.add_new_item', ['item'=>__($this->title)]),
-            'action_link2'=>route('admin.restaurant.restoareas.index'),
-            'action_name2'=>__('Areas'),
-            'items'=>$this->getRestaurant()->tables()->paginate(config('settings.paginate')),
-            'item_names'=>$this->titlePlural,
-            'webroute_path'=>$this->webroute_path,
-            'fields'=>$this->getFields(),
-            'parameter_name'=>$this->parameter_name,
-            'hasQR'=>true&&!config('app.ispc'),
+            'title' => __('crud.item_managment', ['item' => __($this->titlePlural)]),
+            'action_link' => route($this->webroute_path.'create'),
+            'action_name' => __('crud.add_new_item', ['item' => __($this->title)]),
+            'action_link2' => route('admin.restaurant.restoareas.index'),
+            'action_name2' => __('Areas'),
+            'items' => $this->getRestaurant()->tables()->paginate(config('settings.paginate')),
+            'item_names' => $this->titlePlural,
+            'webroute_path' => $this->webroute_path,
+            'fields' => $this->getFields(),
+            'parameter_name' => $this->parameter_name,
+            'hasQR' => true && ! config('app.ispc'),
         ]]);
     }
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(): View
     {
         $this->authChecker();
 
         return view('general.form', ['setup' => [
-            'inrow'=>true,
-            'title'=>__('crud.new_item', ['item'=>__($this->title)]),
-            'action_link'=>route($this->webroute_path.'index'),
-            'action_name'=>__('crud.back'),
-            'iscontent'=>true,
-            'action'=>route($this->webroute_path.'store'),
+            'inrow' => true,
+            'title' => __('crud.new_item', ['item' => __($this->title)]),
+            'action_link' => route($this->webroute_path.'index'),
+            'action_name' => __('crud.back'),
+            'iscontent' => true,
+            'action' => route($this->webroute_path.'store'),
         ],
-        'fields'=>$this->getFields(), ]);
+            'fields' => $this->getFields(), ]);
     }
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $this->authChecker();
         $item = $this->provider::create([
-            'name'=>$request->name,
-            'restoarea_id'=>$request->restoarea_id,
-            'size'=>$request->size,
-            'restaurant_id'=>$this->getRestaurant()->id,
+            'name' => $request->name,
+            'restoarea_id' => $request->restoarea_id,
+            'size' => $request->size,
+            'restaurant_id' => $this->getRestaurant()->id,
         ]);
         $item->save();
 
-        return redirect()->route($this->webroute_path.'index')->withStatus(__('crud.item_has_been_added', ['item'=>__($this->title)]));
+        return redirect()->route($this->webroute_path.'index')->withStatus(__('crud.item_has_been_added', ['item' => __($this->title)]));
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Tables  $tables
      * @return \Illuminate\Http\Response
      */
     public function show(Tables $tables)
@@ -145,9 +141,8 @@ class TablesController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  \App\Tables  $tables
-     * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($id): View
     {
         $this->authChecker();
         $item = $this->provider::findOrFail($id);
@@ -160,25 +155,23 @@ class TablesController extends Controller
         $parameter[$this->parameter_name] = $id;
 
         return view('general.form', ['setup' => [
-            'inrow'=>true,
-            'title'=>__('crud.edit_item_name', ['item'=>__($this->title), 'name'=>$item->name]),
-            'action_link'=>route($this->webroute_path.'index'),
-            'action_name'=>__('crud.back'),
-            'iscontent'=>true,
-            'isupdate'=>true,
-            'action'=>route($this->webroute_path.'update', $parameter),
+            'inrow' => true,
+            'title' => __('crud.edit_item_name', ['item' => __($this->title), 'name' => $item->name]),
+            'action_link' => route($this->webroute_path.'index'),
+            'action_name' => __('crud.back'),
+            'iscontent' => true,
+            'isupdate' => true,
+            'action' => route($this->webroute_path.'update', $parameter),
         ],
-        'fields'=>$fields, ]);
+            'fields' => $fields, ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  \App\Tables  $tables
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): RedirectResponse
     {
         $this->authChecker();
         $item = $this->provider::findOrFail($id);
@@ -187,20 +180,20 @@ class TablesController extends Controller
         $item->size = $request->size;
         $item->update();
 
-        return redirect()->route($this->webroute_path.'index')->withStatus(__('crud.item_has_been_updated', ['item'=>__($this->title)]));
+        return redirect()->route($this->webroute_path.'index')->withStatus(__('crud.item_has_been_updated', ['item' => __($this->title)]));
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Tables  $tables
-     * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($id): RedirectResponse
     {
         $this->authChecker();
         $item = $this->provider::findOrFail($id);
         $item->delete();
-        return redirect()->route($this->webroute_path.'index')->withStatus(__('crud.item_has_been_removed', ['item'=>__($this->title)]));
+
+        return redirect()->route($this->webroute_path.'index')->withStatus(__('crud.item_has_been_removed', ['item' => __($this->title)]));
     }
 }

@@ -126,7 +126,7 @@
             <hr class="my-3">
             <!-- Heading -->
             @if(auth()->user()->hasRole('admin'))
-            <h6 class="navbar-heading text-muted">{{ __('Version')}} {{ config('config.version')}}   <span id="uptodate" class="badge badge-success" style="display:none;">{{ __('latest') }}</span></h6>
+            <h6 class="navbar-heading text-muted">{{ __('Version')}} {{ config('version.version')}}   <span id="uptodate" class="badge badge-success" style="display:none;">{{ __('latest') }}</span></h6>
                 <h6>{{ \Carbon\Carbon::now() }} </h6>
                 
                 <hr class="my-3">

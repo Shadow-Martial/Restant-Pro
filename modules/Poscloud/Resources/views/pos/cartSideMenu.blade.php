@@ -18,19 +18,20 @@
                         
                         <li v-cloak class="list-group-item border-0 d-flex p-2 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
-                              <h6 class="mb-3 text-sm">@{{ item.name }}</h6>
+                              <h6 v-if="item.kds_finished=='1'" class="mb-3 text-sm"><del>@{{ item.name }}</del></h6>
+                              <h6 v-if="item.kds_finished!='1'" class="mb-3 text-sm">@{{ item.name }}</h6>
                               <span class="mb-2 text-xs">{{ __('Price') }}: <span class="text-dark font-weight-bold ms-2">@{{ item.attributes.friendly_price }}</span></span>
                               <span class="mb-2 text-xs">{{ __('QTY') }}: <span class="text-dark ms-2 font-weight-bold">@{{ item.quantity }}</span></span>
                             </div>
                             <div class="ms-auto">
                                
-                                <button v-if="item.quantity==1" type="button" v-on:click="remove(item.id)"  :value="item.id" class="btn btn-outline-primary btn-icon btn-sm page-link btn-cart-radius">
+                                <button v-if="item.quantity==1&&item.kds_finished!='1'" type="button" v-on:click="remove(item.id)"  :value="item.id" class="btn btn-outline-primary btn-icon btn-sm page-link btn-cart-radius">
                                     <span class="btn-inner--icon btn-cart-icon"><i class="fa fa-trash"></i></span>
                                 </button>
-                                <button v-if="item.quantity!=1" type="button" v-on:click="decQuantity(item.id)" :value="item.id" class="btn btn-outline-primary btn-icon btn-sm page-link btn-cart-radius">
+                                <button v-if="item.quantity!=1&&item.kds_finished!='1'" type="button" v-on:click="decQuantity(item.id)" :value="item.id" class="btn btn-outline-primary btn-icon btn-sm page-link btn-cart-radius">
                                     <span class="btn-inner--icon btn-cart-icon"><i class="fa fa-minus"></i></span>
                                 </button>
-                                <button type="button" v-on:click="incQuantity(item.id)" :value="item.id" class="btn btn-outline-primary btn-icon btn-sm page-link btn-cart-radius">
+                                <button v-if="item.kds_finished!='1'" type="button" v-on:click="incQuantity(item.id)" :value="item.id" class="btn btn-outline-primary btn-icon btn-sm page-link btn-cart-radius">
                                     <span class="btn-inner--icon btn-cart-icon"><i class="fa fa-plus"></i></span>
                                 </button>
                                 
@@ -109,6 +110,21 @@
                                         <span><i id="promo_code_succ" class="ni ni-check-bold text-success"></i></span>
                                         <span><i id="promo_code_war" class="ni ni-fat-remove text-danger"></i></span>
                                     </div>
+                                </div>
+                            </div>
+                            <br/>
+                            <!-- End Cooupo Code -->
+                        @endif
+
+
+                        @if(\Akaunting\Module\Facade::has('cards')&&$restorant->getConfig('enable_loyalty', false))
+                            <!-- Loyalty card CODE -->
+                            <div  class="card card-stats p-2 mb-0">
+                                <div  class="row mt-2 mt-2">
+                                    <div class="col-md-12">
+                                        <input  id="loyalty_card" name="loyalty_card" type="text" class="form-control form-control-alternative" placeholder="{{ __('Loyalty card')}}">
+                                    </div>
+                                    
                                 </div>
                             </div>
                             <br/>

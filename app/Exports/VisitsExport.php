@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Visit;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 

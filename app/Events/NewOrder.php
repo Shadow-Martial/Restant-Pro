@@ -4,8 +4,6 @@ namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -15,7 +13,9 @@ class NewOrder implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $order;
+
     public $msg;
+
     public $owner;
 
     /**
@@ -25,9 +25,9 @@ class NewOrder implements ShouldBroadcast
      */
     public function __construct($order, $msg)
     {
-        $this->order = ["id"=>$order->id];
+        $this->order = ['id' => $order->id];
         $this->msg = $msg;
-        $this->owner=$order->restorant->user->id;
+        $this->owner = $order->restorant->user->id;
     }
 
     /**
@@ -35,9 +35,9 @@ class NewOrder implements ShouldBroadcast
      *
      * @return \Illuminate\Broadcasting\Channel|array
      */
-    public function broadcastOn()
+    public function broadcastOn(): array
     {
-        return new Channel('user.'.$this->owner);
+        return [new Channel('user.'.$this->owner)];
     }
 
     public function broadcastAs()

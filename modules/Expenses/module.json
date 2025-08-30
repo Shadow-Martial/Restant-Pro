@@ -3,7 +3,7 @@
     "description": "",
     "keywords": [],
     "active": 1,
-    "version":"1.0",
+    "version":"1.6",
     "order": 0,
     "providers": [
         "Modules\\Expenses\\Providers\\Main"
@@ -11,6 +11,13 @@
     "aliases": {},
     "files": [],
     "requires": [],
+    "vendor_fields":[{
+        "separator":"Expenses",
+        "title": "Enable Expenses",
+        "key": "expenses_enable",
+        "ftype": "bool",
+        "value":true
+    }],
     "ownermenus":[
         {
             "name":"Expenses",

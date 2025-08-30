@@ -9,11 +9,8 @@ class CouldNotSendNotification extends \Exception
 {
     /**
      * Expo responded with an error.
-     *
-     * @param $response
-     * @return static
      */
-    public static function serviceRespondedWithAnError($response)
+    public static function serviceRespondedWithAnError($response): static
     {
         return new static('Expo responded with an error: `'.$response->getBody()->getContents().'`');
     }
@@ -21,10 +18,9 @@ class CouldNotSendNotification extends \Exception
     /**
      * Thrown on a generic error.
      *
-     * @param mixed $notification
-     * @return static
+     * @param  mixed  $notification
      */
-    public static function genericMessage($message)
+    public static function genericMessage($message): static
     {
         return new static($message);
     }
@@ -33,10 +29,9 @@ class CouldNotSendNotification extends \Exception
      * Thrown if a notification instance does not implement a toExpo() method, but is
      * attempting to be delivered via the Expo notification channel.
      *
-     * @param mixed $notification
-     * @return static
+     * @param  mixed  $notification
      */
-    public static function undefinedMethod($notification)
+    public static function undefinedMethod($notification): static
     {
         return new static(
             'Notification of class: '.get_class($notification)
@@ -48,10 +43,9 @@ class CouldNotSendNotification extends \Exception
      * Thrown if a notification instance's `toExpo()` method,
      * does not return an instance of `\NotificationChannels\Expo\ExpoMessage`.
      *
-     * @param mixed $notification
-     * @return static
+     * @param  mixed  $notification
      */
-    public static function couldNotCreateMessage($notification)
+    public static function couldNotCreateMessage($notification): static
     {
         return new static(
             'Notification of class: '.get_class($notification)
@@ -63,10 +57,9 @@ class CouldNotSendNotification extends \Exception
      * Thrown if a notifiable instance's `routeNotificationFor` method does not return a
      * valid Expo push token.
      *
-     * @param mixed $notifiable
-     * @return static
+     * @param  mixed  $notifiable
      */
-    public static function noValidDestination($notifiable)
+    public static function noValidDestination($notifiable): static
     {
         return new static(
             'Notifiable of class: '.get_class($notifiable)
@@ -77,11 +70,8 @@ class CouldNotSendNotification extends \Exception
     /**
      * Thrown if a 400-level Http error was encountered whilst attempting to deliver the
      * notification.
-     *
-     * @param ClientException $exception
-     * @return static
      */
-    public static function clientError(ClientException $exception)
+    public static function clientError(ClientException $exception): static
     {
         if (! $exception->hasResponse()) {
             return new static('Expo responded with an error but no response body was available');
@@ -98,11 +88,8 @@ class CouldNotSendNotification extends \Exception
     /**
      * Thrown if an unexpected exception was encountered whilst attempting to deliver the
      * notification.
-     *
-     * @param Exception $exception
-     * @return static
      */
-    public static function unexpectedException(Exception $exception)
+    public static function unexpectedException(Exception $exception): static
     {
         return new static(
             'Failed to send Expo notification, unexpected exception encountered: `'.$exception->getMessage().'`',

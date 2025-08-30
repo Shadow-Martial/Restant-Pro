@@ -87,7 +87,7 @@
  
 
     <!-- All in one -->
-    <script src="{{ asset('custom') }}/js/js.js?id={{ config('config.version')}}s"></script>
+    <script src="{{ asset('custom') }}/js/js.js?id={{ config('version.version')}}s"></script>
 
     <!-- Custom JS defined by admin -->
     <?php echo file_get_contents(base_path('public/byadmin/front.js')) ?>

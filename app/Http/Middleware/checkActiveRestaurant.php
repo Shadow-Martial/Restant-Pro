@@ -4,18 +4,16 @@ namespace App\Http\Middleware;
 
 use App\Restorant;
 use Closure;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
+use Symfony\Component\HttpFoundation\Response;
 
 class checkActiveRestaurant
 {
     /**
      * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
      */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         $tmp = explode('/', URL::current());
         $alias = end($tmp);

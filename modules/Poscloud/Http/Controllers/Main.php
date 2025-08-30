@@ -11,10 +11,11 @@ use App\Http\Controllers\Controller;
 use App\Models\SimpleDelivery;
 use App\Restorant;
 use App\Tables;
-use Darryldecode\Cart\CartCollection;
+use Darryldecode\Cart\CartCollection as RealCartCollection;
 use Carbon\Carbon;
 use Cart;
 use Akaunting\Module\Facade as Module;
+use App\Order;
 use PDO;
 
 class Main extends Controller
@@ -96,9 +97,11 @@ class Main extends Controller
         $formatter = new \IntlDateFormatter(config('app.locale'), \IntlDateFormatter::SHORT, \IntlDateFormatter::SHORT);
         $formatter->setPattern(config('settings.datetime_workinghours_display_format_new'));
 
+        $vendor=Restorant::findOrFail(auth()->user()->restaurant_id);
+
         foreach ($orders as $key => $order) {
 
-            $theOrder=new CartCollection($order->cart_data);
+            $theOrder=new RealCartCollection($order->cart_data);
             $sum = $theOrder->sum(function ($item) {
                 return $item->getPriceSum();
             });
@@ -106,7 +109,9 @@ class Main extends Controller
             $theTable=$order->type==3?Tables::findOrFail($order->id):null;
             if($sum!=0){
                 array_push($returnArray,[
+                    'isPOSOrder'=>true,
                     'id'=>$order->id,
+                    'order_id'=>$order->receipt_number,
                     'receipt_number'=>$order->receipt_number,
                     'employee'=>$order->user->name,
                     'date'=>$formatter->format($order->created_at),
@@ -121,6 +126,42 @@ class Main extends Controller
                 $order->delete();
             }
             
+        }
+
+       
+        if($vendor->getConfig('external_orders','false')=="true"){
+            //Get all the active orders
+            //Orders from Database that are not made
+            $dbOrders=Order::orderBy('created_at', 'desc')
+                    ->where(['restorant_id'=>$vendor->id])
+                    ->where('created_at', '>=', Carbon::now()->subDay())
+                    ->with(['items', 'status', 'restorant', 'client', 'address']);
+            $dbOrders = $dbOrders->whereHas('laststatus', function($q){
+                $q->where('status_id',3);
+            });
+            $dbOrders = $dbOrders->whereDoesntHave('laststatus', function($q){
+                $q->whereIn('status_id', [11, 9]);
+            });
+
+            $dbOrders = $dbOrders->get();
+
+            foreach ($dbOrders  as $key => $order) {
+                $theTable=$order->delivery_method==3?Tables::findOrFail($order->table_id):null;
+                array_push($returnArray,[
+                    'isPOSOrder'=>false,
+                    'id'=>$order->table_id,
+                    'order_id'=>$order->id,
+                    'receipt_number'=>$order->id_formated,
+                    'employee'=>__('Web order'),
+                    'date'=>$formatter->format($order->created_at),
+                    'table'=>$order->delivery_method==3?$theTable->restoarea->name."-".$theTable->name:"",
+                    'expedition'=>$order->delivery_method,
+                    'type'=>$order->delivery_method==3?__('Dine in'):($order->delivery_method==2?__('Takeaway'):__('Delivery')),
+                    'total'=> Money($order->order_price_with_discount, config('settings.cashier_currency'), config('settings.do_convertion'))->format(),
+                    'config'=>$order->getAllConfigs()
+                ]);
+            }
+
         }
 
         return response()->json([
@@ -287,10 +328,21 @@ class Main extends Controller
                 ]);
             }
 
+            $orderToReturn=Order::where('id',$orderRepo->order->id)->with('items')->first();
+
+            if($vendor->getConfig('order_completed_once_paid',false)){
+                 //Add closing statuses
+                $orderToReturn->status()->attach(3, ['user_id'=>auth()->user()->id, 'comment'=>__('Order finalized')]);
+                $orderToReturn->status()->attach(5, ['user_id'=>auth()->user()->id, 'comment'=>__('Order finalized')]);
+                $orderToReturn->status()->attach(7, ['user_id'=>auth()->user()->id, 'comment'=>__('Order finalized')]);
+                $orderToReturn->status()->attach(11, ['user_id'=>auth()->user()->id, 'comment'=>__('Order finalized')]);
+            }
+
+           
             return response()->json([
                 'status' => true,
                 'message' => __('Order finalized'),
-                'order'=>$orderRepo->order,
+                'order'=>$orderToReturn,
                 'id'=>$orderRepo->order->id,
                 'paymentLink'=>$orderRepo->paymentRedirect
             ]);

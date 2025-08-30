@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Order;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -17,7 +16,7 @@ class VendorsExport implements FromArray, WithHeadings
             'vendor_id',
             'created',
             'owner_name',
-            'owner_email'
+            'owner_email',
         ];
     }
 

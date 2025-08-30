@@ -109,6 +109,10 @@
       var SHOWN_NOW="floor"; //floor,orders,order
       var floorPlan=@json($floorPlan);
 
+      var ntw="<?php echo  __('New takeaway order') ?>";
+      var nde="<?php echo  __('New delivery order') ?>";
+      var ndw="<?php echo  __('New delivery order') ?>";
+
       // "Global" flag to indicate whether the select2 control is oedropped down).
       var _selectIsOpen = false;
 
@@ -120,7 +124,7 @@
    <script src="{{ asset('custom') }}/js/cartSideMenu.js"></script>
 
    <!-- All in one -->
-   <script src="{{ asset('custom') }}/js/js.js?id={{ config('config.version')}}"></script>
+   <script src="{{ asset('custom') }}/js/js.js?id={{ config('version.version')}}"></script>
 
    <!-- Notify JS -->
    <script src="{{ asset('custom') }}/js/notify.min.js"></script>
@@ -334,7 +338,7 @@
 
    function createDeliveryOrder() {
       CURRENT_TABLE_ID= 1+""+(new Date().getTime()+"").substring(6)
-      CURRENT_TABLE_NAME="New delivery order";
+      CURRENT_TABLE_NAME=ndw;
       EXPEDITION=1;
       expedition.config={};
       getCartContentAndTotalPrice();
@@ -343,7 +347,7 @@
 
    function createPickupOrder() { 
       CURRENT_TABLE_ID= (new Date().getTime()+"").substring(6)
-      CURRENT_TABLE_NAME="New takeaway order";
+      CURRENT_TABLE_NAME=ntw;
       EXPEDITION=2;
       expedition.config={};
       getCartContentAndTotalPrice();
@@ -381,12 +385,23 @@
       showOrderDetail(id);
     }
 
+    var webOrders=[];
+
     function makeOcccupied(id){
       $('#drag-'+id).addClass('occcupied');
     }
 
+    function makeWebOcccupied(id,order_id){
+      $('#drag-'+id).addClass('webcccupied');
+      webOrders[id]=order_id;
+    }
+
+
+
     function makeFree(){
       $('.occcupied').removeClass('occcupied');
+      $('.webcccupied').removeClass('webcccupied');
+      webOrders=[];
     }
   </script>
 
@@ -397,7 +412,13 @@
       //The drag id
       var dragid=event.currentTarget.id;
       var id=dragid.replace('drag-',"");
-      openTable(id,"");
+      if(webOrders[id]){
+        window.open("/orders/"+webOrders[id],"_blank")
+        
+      }else{
+        openTable(id,"");
+      }
+     
       event.preventDefault()
     });
     </script>

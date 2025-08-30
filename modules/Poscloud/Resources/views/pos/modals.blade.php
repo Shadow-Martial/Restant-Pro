@@ -34,11 +34,11 @@
                                 <input type="text" v-model="received" class="form-control" placeholder="0" aria-label="o" autofocus>
                             </div>
                             <label>{{ __('Change') }}</label>
-                            <p class="h2 text-success">@{{ received-totalPrice>0?(received-totalPrice).toFixed(2):0 }}
+                            <p class="h2 text-success">@{{ received-totalPrice>0?parseFloat(received-totalPrice).toFixed(2):0 }}
                             </p>
 
                             <label>{{ __('Remaining') }}</label>
-                            <p class="h2 text-danger">@{{ totalPrice-received>0?(totalPrice-received).toFixed(2):0 }}
+                            <p class="h2 text-danger">@{{ totalPrice-received>0?parseFloat(totalPrice-received).toFixed(2):0 }}
                             </p>
                         </form>
 
@@ -146,7 +146,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="max-height: calc(100vh - 200px); overflow-y: auto;">
 
                 <div id="posRecipt" class="ml-1">
                     <p class="text-right">{{__('Date')}} : @{{ order?order.time_created:"" }}</p>
@@ -179,24 +179,24 @@
                         </thead>
                         <tbody >
                             <tr v-for="item in (order?order.items:[])">
-                                <td>@{{ item.name+" "+item.pivot.variant_name+" "+(item.pivot.extras.replace('["',"").replace('"]',"").replace('","',"  ").replace('","',"  ").replace('","',"  ").replace("[]","")) }}</td>
+                                <td>@{{ item.name+" "+item.pivot.variant_name+showIt(item.pivot.extras) }}</td>
                                 <td>@{{ item.pivot.qty }}</td>
                                 <td>@{{ formatPrice(item.pivot.qty*item.pivot.variant_price) }}</td>
                             </tr>
                             <tr>
                               <th></th>
                               <th>{{ __('Tax inc.') }}</th>
-                              <td>@{{ order?formatPrice(order.vatvalue.toFixed(2)):"" }}</td>
+                              <td>@{{ order?formatPrice(parseFloat(order.vatvalue).toFixed(2)):"" }}</td>
                             </tr>
                             <tr v-if="order&&order.delivery_method==1" class="blockDelivery">
                                 <th></th>
                                 <th>{{ __('Delivery')}}</th>
-                                <td>@{{ order? formatPrice(order.delivery_price.toFixed(2)):"" }}</td>
+                                <td>@{{ order? formatPrice(parseFloat(order.delivery_price).toFixed(2)):"" }}</td>
                             </tr>
                             <tr v-if="order&&order.discount>0" class="blockDelivery">
                                 <th></th>
                                 <th>{{ __('Discount')}}</th>
-                                <td>@{{ order? formatPrice(order.discount.toFixed(2)):"" }}</td>
+                                <td>@{{ order? formatPrice(parseFloat(order.discount).toFixed(2)):"" }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -204,7 +204,7 @@
                         <tbody>
                             <tr>
                                 <th class="p-1 w-70">{{ __('Total') }}</th>
-                                <th class="p-1 w-30">@{{ order?formatPrice((order.order_price_with_discount+order.delivery_price).toFixed(2)):"" }}</th>
+                                <th class="p-1 w-30">@{{ order?formatPrice(  (parseFloat(order.order_price_with_discount)+parseFloat(order.delivery_price)).toFixed(2)  ):"" }}</th>
                             </tr>
                         </tbody>
                     </table>

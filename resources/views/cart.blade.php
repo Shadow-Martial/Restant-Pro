@@ -13,7 +13,7 @@
       <div class="container">
 
 
-        <x:notify-messages />
+        @include('notify::components.notify')
 
           <div class="row">
 

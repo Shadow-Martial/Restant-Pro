@@ -57,12 +57,13 @@
                 <div class="card bg-secondary shadow">
                     <div class="card-header bg-white border-0">
                         <div class="row align-items-center">
-                            <div class="col-8">
+                            <div class="col-6">
                                 <h3 class="mb-0">{{ __('Item Management') }}</h3>
                             </div>
-                            <div class="col-4 text-right">
+                            <div class="col-6 text-right">
                                 @if(auth()->user()->hasRole('owner'))
                                     <a href="{{ route('items.index') }}" class="btn btn-sm btn-primary">{{ __('Back to items') }}</a>
+                                    <a onclick="copyToClipboard('{{ $restorant->getLinkAttribute().'?pid='.$item->id}}')" href="#" class="btn btn-sm btn-primary">{{ __('Copy URL') }}</a>
                                 @elseif(auth()->user()->hasRole('admin'))
                                     <a href="{{ route('items.admin', $restorant) }}" class="btn btn-sm btn-primary">{{ __('Back to items') }}</a>
                                 @endif
@@ -126,7 +127,20 @@
                                         @include('partials.toggle',['id'=>'itemAvailable','name'=>'Item available','checked'=>($item->available == 1)])
                                         @include('partials.toggle',['id'=>'has_variants','name'=>'Enable variants','checked'=>($item->has_variants==1)])
                                         @if($item->has_variants==1)
-                                            @include('partials.toggle',['additionalInfo'=>' Missing variants will have the same price as the item','id'=>'enable_system_variants','name'=>'Enable System Variants','checked'=>($item->enable_system_variants==1)])
+                                            @include('partials.toggle',['additionalInfo'=>'Missing variants will have the same price as the item','id'=>'enable_system_variants','name'=>'Enable System Variants','checked'=>($item->enable_system_variants==1)])
+                                        @endif
+                                        @if($restorant->getConfig('stock_enabled',"false")!="false")
+                                            @include('partials.toggle',['id'=>'qty_management','name'=>'Enable QTY Managment','checked'=>($item->qty_management==1)])
+
+                                            @if ($item->qty_management==1)
+                                                @if ($item->has_variants==1)
+                                                    @include('partials.input',['readonly'=>true,'id'=>'qty','name'=>__('Item QTY - determined as sum of the QTY of the variants'),'placeholder'=>__('Item QTY'),'value'=>$item->qty,'required'=>false,'type'=>'number'])
+                                                @else
+                                                    @include('partials.input',['id'=>'qty','name'=>__('Item QTY'),'placeholder'=>__('Item QTY'),'value'=>$item->qty,'required'=>false,'type'=>'number'])
+                                                @endif
+                                                
+                                                
+                                            @endif
                                         @endif
                                     </div>
                                     <div class="col-md-6">
@@ -286,5 +300,18 @@
                 }
             );
         }
+
+        function copyToClipboard(url) {
+            event.preventDefault();
+            navigator.clipboard.writeText(url)
+                .then(() => {
+                    js.notify('{{ __("Product URL copied to clipboard") }}' , "success");
+                
+                })
+                .catch(err => {
+                    console.error('Could not copy text: ', err);
+                });
+        }
+
     </script>
 @endsection

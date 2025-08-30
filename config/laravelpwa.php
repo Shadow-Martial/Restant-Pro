@@ -9,8 +9,8 @@ return [
         'background_color' => '#ffffff',
         'theme_color' => '#000000',
         'display' => 'standalone',
-        'orientation'=> 'any',
-        'status_bar'=> 'black',
+        'orientation' => 'any',
+        'status_bar' => 'black',
         'icons' => [
             '256x256' => [
                 'path' => 'android-chrome-256x256.png',
@@ -27,7 +27,7 @@ return [
                     'src' => '/images/icons/icon-72x72.png',
                     'purpose' => 'any',
                 ],
-            ]
+            ],
         ],
         'custom' => [],
         'splash' => [

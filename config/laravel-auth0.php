@@ -9,7 +9,7 @@ return [
     |   As set in the auth0 administration page
     |
     */
-    'domain'        => env('AUTH0_DOMAIN'),
+    'domain' => env('AUTH0_DOMAIN'),
 
     /*
     |--------------------------------------------------------------------------
@@ -18,7 +18,7 @@ return [
     |   As set in the auth0 administration page
     |
     */
-    'client_id'     => env('AUTH0_CLIENT_ID'),
+    'client_id' => env('AUTH0_CLIENT_ID'),
 
     /*
     |--------------------------------------------------------------------------
@@ -37,7 +37,7 @@ return [
      |   'Auth0\Login\Auth0Controller@callback'
      |
      */
-    'redirect_uri'  => env('APP_URL').'/auth0/callback',
+    'redirect_uri' => env('APP_URL').'/auth0/callback',
 
     /*
     |--------------------------------------------------------------------------
@@ -61,7 +61,7 @@ return [
     |   This is used to verify the decoded tokens when using RS256
     |
     */
-    'authorized_issuers'  => [env('AUTH0_DOMAIN')],
+    'authorized_issuers' => [env('AUTH0_DOMAIN')],
 
     /*
     |--------------------------------------------------------------------------
@@ -78,7 +78,7 @@ return [
     |   Used to know if it should decode the secret when using HS256
     |
     */
-    'secret_base64_encoded'  => false,
+    'secret_base64_encoded' => false,
 
     /*
     |--------------------------------------------------------------------------
@@ -87,7 +87,7 @@ return [
     |   Token decoding algorithms supported by your API
     |
     */
-    'supported_algs'        => ['RS256'],
+    'supported_algs' => ['RS256'],
 
     /*
     |--------------------------------------------------------------------------
