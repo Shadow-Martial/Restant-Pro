@@ -33,7 +33,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: Get Composer Cache Directory
         id: composer-cache
@@ -46,11 +45,19 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
+      - name: Cache NPM dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
       - name: Install NPM dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run PHP tests
         run: |
@@ -61,7 +68,7 @@ jobs:
 
       - name: Build assets
         run: |
-          npm run build
+          npm run production
           
           # Make deployment script executable
           chmod +x scripts/deploy.sh
