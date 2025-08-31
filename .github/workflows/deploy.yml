@@ -1,0 +1,154 @@
+name: Deploy to Dokku
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  workflow_dispatch:
+
+env:
+  PHP_VERSION: '8.1'
+  NODE_VERSION: '18'
+  DOKKU_HOST: '209.50.227.94'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, dom, filter, gd, json, zip
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Install NPM dependencies
+        run: npm ci
+
+      - name: Run PHP tests
+        run: |
+          cp .env.testing .env
+          php artisan key:generate
+          php artisan config:cache
+          vendor/bin/phpunit --testdox --coverage-text
+
+      - name: Build assets
+        run: |
+          npm run build
+          
+          # Make deployment script executable
+          chmod +x scripts/deploy.sh
+
+      - name: Prepare deployment files
+        run: |
+          # Remove development dependencies and optimize for production
+          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+          
+          # Ensure proper permissions for Laravel directories
+          chmod -R 755 storage bootstrap/cache
+          
+          # Create deployment info file
+          echo "Deployment Info:" > deployment-info.txt
+          echo "Branch: ${{ github.ref_name }}" >> deployment-info.txt
+          echo "Commit: ${{ github.sha }}" >> deployment-info.txt
+          echo "Timestamp: $(date -u)" >> deployment-info.txt
+          echo "Environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}" >> deployment-info.txt
+
+      - name: Deploy to Dokku
+        uses: dokku/github-action@master
+        with:
+          git_remote_url: 'ssh://dokku@${{ env.DOKKU_HOST }}:22/${{ github.ref == 'refs/heads/main' && 'restant-main' || 'restant-staging' }}'
+          ssh_private_key: ${{ secrets.DOKKU_SSH_PRIVATE_KEY }}
+          git_push_flags: '--force'
+
+      - name: Run post-deployment commands
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ env.DOKKU_HOST }}
+          username: dokku
+          key: ${{ secrets.DOKKU_SSH_PRIVATE_KEY }}
+          script: |
+            APP_NAME=${{ github.ref == 'refs/heads/main' && 'restant-main' || 'restant-staging' }}
+            
+            # Run deployment script
+            dokku run $APP_NAME bash scripts/deploy.sh
+            
+            # Verify deployment
+            dokku ps:report $APP_NAME
+
+      - name: Health check
+        run: |
+          APP_URL=${{ github.ref == 'refs/heads/main' && 'https://restant.main.susankshakya.com.np' || 'https://restant.staging.susankshakya.com.np' }}
+          
+          # Wait for deployment to be ready
+          sleep 30
+          
+          # Check if application is responding
+          for i in {1..5}; do
+            if curl -f -s "$APP_URL/health" > /dev/null; then
+              echo "✅ Health check passed"
+              exit 0
+            fi
+            echo "⏳ Waiting for application to be ready... (attempt $i/5)"
+            sleep 10
+          done
+          
+          echo "❌ Health check failed"
+          exit 1
+
+      - name: Notify deployment success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'
+          text: |
+            🚀 Deployment successful!
+            Branch: ${{ github.ref_name }}
+            Environment: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Staging' }}
+            Commit: ${{ github.sha }}
+            URL: ${{ github.ref == 'refs/heads/main' && 'https://restant.main.susankshakya.com.np' || 'https://restant.staging.susankshakya.com.np' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify deployment failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#deployments'
+          text: |
+            ❌ Deployment failed!
+            Branch: ${{ github.ref_name }}
+            Environment: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Staging' }}
+            Commit: ${{ github.sha }}
+            Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

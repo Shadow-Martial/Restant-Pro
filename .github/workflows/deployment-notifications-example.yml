@@ -1,0 +1,120 @@
+name: Deployment with Notifications
+
+on:
+  push:
+    branches: [main, staging]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        
+    - name: Install dependencies
+      run: composer install --no-dev --optimize-autoloader
+      
+    - name: Determine environment
+      id: env
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          echo "environment=production" >> $GITHUB_OUTPUT
+        else
+          echo "environment=staging" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Notify deployment started
+      run: |
+        php artisan deployment:notify started ${{ steps.env.outputs.environment }} \
+          --branch=${{ github.ref_name }} \
+          --commit=${{ github.sha }} \
+          --details="workflow_run_id=${{ github.run_id }}" \
+          --details="actor=${{ github.actor }}"
+      
+    - name: Run tests
+      run: php artisan test
+      
+    - name: Build assets
+      run: |
+        npm ci
+        npm run build
+        
+    - name: Deploy to Dokku
+      run: |
+        # Add Dokku server to known hosts
+        mkdir -p ~/.ssh
+        ssh-keyscan -H ${{ secrets.DOKKU_HOST }} >> ~/.ssh/known_hosts
+        
+        # Setup SSH key
+        echo "${{ secrets.DOKKU_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        
+        # Deploy via git push
+        git remote add dokku dokku@${{ secrets.DOKKU_HOST }}:restant-${{ steps.env.outputs.environment }}
+        git push dokku ${{ github.ref_name }}:main
+        
+    - name: Run post-deployment tasks
+      run: |
+        # Run migrations
+        ssh dokku@${{ secrets.DOKKU_HOST }} run restant-${{ steps.env.outputs.environment }} php artisan migrate --force
+        
+        # Clear caches
+        ssh dokku@${{ secrets.DOKKU_HOST }} run restant-${{ steps.env.outputs.environment }} php artisan config:cache
+        ssh dokku@${{ secrets.DOKKU_HOST }} run restant-${{ steps.env.outputs.environment }} php artisan route:cache
+        ssh dokku@${{ secrets.DOKKU_HOST }} run restant-${{ steps.env.outputs.environment }} php artisan view:cache
+        
+    - name: Health check
+      id: health
+      run: |
+        # Wait for deployment to be ready
+        sleep 30
+        
+        # Check application health
+        HEALTH_URL="https://restant.${{ steps.env.outputs.environment }}.susankshakya.com.np/health"
+        if curl -f -s "$HEALTH_URL" > /dev/null; then
+          echo "health_status=success" >> $GITHUB_OUTPUT
+        else
+          echo "health_status=failed" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+        
+    - name: Notify deployment success
+      if: success()
+      run: |
+        php artisan deployment:notify success ${{ steps.env.outputs.environment }} \
+          --branch=${{ github.ref_name }} \
+          --commit=${{ github.sha }} \
+          --details="workflow_run_id=${{ github.run_id }}" \
+          --details="duration=${{ job.duration }}" \
+          --details="health_status=${{ steps.health.outputs.health_status }}"
+          
+    - name: Notify deployment failure
+      if: failure()
+      run: |
+        php artisan deployment:notify failure ${{ steps.env.outputs.environment }} \
+          --branch=${{ github.ref_name }} \
+          --commit=${{ github.sha }} \
+          --error="Deployment workflow failed at step: ${{ job.status }}" \
+          --details="workflow_run_id=${{ github.run_id }}" \
+          --details="failed_step=${{ steps.health.outcome }}"
+          
+    - name: Rollback on failure
+      if: failure() && steps.health.outcome == 'failure'
+      run: |
+        # Get previous successful commit
+        PREVIOUS_COMMIT=$(git log --format="%H" -n 2 | tail -1)
+        
+        # Trigger rollback
+        ssh dokku@${{ secrets.DOKKU_HOST }} ps:rebuild restant-${{ steps.env.outputs.environment }}
+        
+        # Notify rollback
+        php artisan deployment:notify rollback ${{ steps.env.outputs.environment }} \
+          --reason="Health check failed after deployment" \
+          --previous-commit="$PREVIOUS_COMMIT" \
+          --details="health_check_url=https://restant.${{ steps.env.outputs.environment }}.susankshakya.com.np/health"

@@ -1,0 +1,185 @@
+name: Deployment Health Check
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Deployment environment (staging, production)'
+        required: true
+        type: string
+      health_check_url:
+        description: 'Health check URL to verify'
+        required: true
+        type: string
+      max_retries:
+        description: 'Maximum number of health check retries'
+        required: false
+        type: number
+        default: 10
+      retry_delay:
+        description: 'Delay between retries in seconds'
+        required: false
+        type: number
+        default: 30
+      timeout:
+        description: 'Timeout for each health check in seconds'
+        required: false
+        type: number
+        default: 30
+    outputs:
+      health_status:
+        description: 'Overall health status'
+        value: ${{ jobs.health-check.outputs.status }}
+      deployment_ready:
+        description: 'Whether deployment is ready'
+        value: ${{ jobs.health-check.outputs.ready }}
+
+jobs:
+  health-check:
+    name: Verify Deployment Health
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    outputs:
+      status: ${{ steps.health-check.outputs.status }}
+      ready: ${{ steps.health-check.outputs.ready }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Wait for deployment to be ready
+        id: wait-ready
+        run: |
+          echo "🔍 Waiting for deployment to be ready..."
+          
+          max_retries=${{ inputs.max_retries }}
+          retry_delay=${{ inputs.retry_delay }}
+          timeout=${{ inputs.timeout }}
+          health_url="${{ inputs.health_check_url }}"
+          
+          for ((i=1; i<=max_retries; i++)); do
+            echo "Attempt $i/$max_retries - Checking $health_url"
+            
+            if curl -f -s --max-time "$timeout" "$health_url" > /dev/null 2>&1; then
+              echo "✅ Application is responding!"
+              echo "ready=true" >> $GITHUB_OUTPUT
+              exit 0
+            else
+              if [ "$i" -lt "$max_retries" ]; then
+                echo "⚠️ Application not ready, waiting ${retry_delay}s..."
+                sleep "$retry_delay"
+              fi
+            fi
+          done
+          
+          echo "❌ Application failed to become ready after $max_retries attempts"
+          echo "ready=false" >> $GITHUB_OUTPUT
+          exit 1
+
+      - name: Comprehensive health check
+        id: health-check
+        if: steps.wait-ready.outputs.ready == 'true'
+        run: |
+          echo "🏥 Performing comprehensive health check..."
+          
+          health_url="${{ inputs.health_check_url }}"
+          timeout=${{ inputs.timeout }}
+          
+          # Get overall health status
+          echo "Checking overall health at $health_url"
+          health_response=$(curl -f -s --max-time "$timeout" "$health_url" 2>/dev/null || echo '{"status":"error"}')
+          
+          echo "Health response: $health_response"
+          
+          # Parse status
+          overall_status=$(echo "$health_response" | jq -r '.status // "unknown"')
+          echo "Overall status: $overall_status"
+          
+          # Check individual services
+          services=("database" "sentry" "flagsmith" "grafana" "ssl")
+          failed_services=0
+          
+          for service in "${services[@]}"; do
+            echo "Checking $service health..."
+            service_response=$(curl -f -s --max-time "$timeout" "${health_url}/${service}" 2>/dev/null || echo '{"status":"error"}')
+            service_status=$(echo "$service_response" | jq -r '.status // "unknown"')
+            
+            case "$service_status" in
+              "healthy")
+                echo "✅ $service: Healthy"
+                ;;
+              "degraded")
+                echo "⚠️ $service: Degraded but operational"
+                ;;
+              "disabled")
+                echo "ℹ️ $service: Disabled"
+                ;;
+              *)
+                echo "❌ $service: Unhealthy ($service_status)"
+                ((failed_services++))
+                ;;
+            esac
+          done
+          
+          # Determine final status
+          case "$overall_status" in
+            "healthy")
+              echo "status=healthy" >> $GITHUB_OUTPUT
+              echo "ready=true" >> $GITHUB_OUTPUT
+              echo "🎉 All systems healthy - deployment successful!"
+              ;;
+            "degraded")
+              if [ "$failed_services" -le 2 ]; then
+                echo "status=degraded" >> $GITHUB_OUTPUT
+                echo "ready=true" >> $GITHUB_OUTPUT
+                echo "⚠️ Some services degraded but deployment acceptable"
+              else
+                echo "status=unhealthy" >> $GITHUB_OUTPUT
+                echo "ready=false" >> $GITHUB_OUTPUT
+                echo "💥 Too many services degraded - deployment has issues"
+                exit 1
+              fi
+              ;;
+            *)
+              echo "status=unhealthy" >> $GITHUB_OUTPUT
+              echo "ready=false" >> $GITHUB_OUTPUT
+              echo "💥 Application unhealthy - deployment failed"
+              exit 1
+              ;;
+          esac
+
+      - name: Generate health report
+        if: always()
+        run: |
+          echo "## Deployment Health Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Health Check URL:** ${{ inputs.health_check_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.wait-ready.outputs.ready }}" == "true" ]; then
+            echo "**Application Status:** ✅ Ready" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "${{ steps.health-check.outputs.status }}" == "healthy" ]; then
+              echo "**Health Status:** ✅ Healthy" >> $GITHUB_STEP_SUMMARY
+            elif [ "${{ steps.health-check.outputs.status }}" == "degraded" ]; then
+              echo "**Health Status:** ⚠️ Degraded" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "**Health Status:** ❌ Unhealthy" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "**Application Status:** ❌ Not Ready" >> $GITHUB_STEP_SUMMARY
+            echo "**Health Status:** ❌ Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ steps.health-check.outputs.ready }}" == "true" ] && [ "${{ steps.health-check.outputs.status }}" == "healthy" ]; then
+            echo "🎉 Deployment health verification passed!"
+          else
+            echo "💥 Deployment health verification failed!"
+            exit 1
+          fi

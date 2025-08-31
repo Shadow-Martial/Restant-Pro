@@ -1,0 +1,46 @@
+{
+  "name": "Restant Pro",
+  "description": "Multi-tenant restaurant management SaaS platform",
+  "keywords": ["laravel", "restaurant", "saas", "multi-tenant"],
+  "website": "https://restant.susankshakya.com.np",
+  "repository": "https://github.com/your-username/restant-pro",
+  "logo": "https://restant.susankshakya.com.np/images/logo.png",
+  "success_url": "/",
+  "scripts": {
+    "dokku": {
+      "predeploy": "php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache"
+    }
+  },
+  "env": {
+    "APP_ENV": {
+      "description": "Application environment",
+      "value": "production"
+    },
+    "APP_DEBUG": {
+      "description": "Enable debug mode",
+      "value": "false"
+    },
+    "APP_KEY": {
+      "description": "Laravel application key",
+      "generator": "secret"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [
+    "dokku-mysql",
+    "dokku-redis"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/php"
+    },
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
