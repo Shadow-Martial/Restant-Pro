@@ -366,3 +366,11 @@ Route::post('/fb-order', [OrderController::class, 'fbOrderMsg'])->name('fb.order
 Route::get('onboarding', [FrontEndController::class, 'onboarding'])->name('sd.onboarding');
 
 Route::get('/{alias}', [FrontEndController::class, 'restorant'])->where('alias', '.*')->name('vendrobyalias');
+
+// Health check routes for deployment verification
+Route::get('/health', [App\Http\Controllers\HealthController::class, 'index'])->name('health.index');
+Route::get('/health/database', [App\Http\Controllers\HealthController::class, 'database'])->name('health.database');
+Route::get('/health/sentry', [App\Http\Controllers\HealthController::class, 'sentry'])->name('health.sentry');
+Route::get('/health/flagsmith', [App\Http\Controllers\HealthController::class, 'flagsmith'])->name('health.flagsmith');
+Route::get('/health/grafana', [App\Http\Controllers\HealthController::class, 'grafana'])->name('health.grafana');
+Route::get('/health/ssl', [App\Http\Controllers\HealthController::class, 'ssl'])->name('health.ssl');

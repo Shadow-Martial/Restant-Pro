@@ -32,6 +32,9 @@ class Kernel extends HttpKernel
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
             \App\Http\Middleware\Language::class,
+            \App\Http\Middleware\DeploymentEnvironmentMiddleware::class,
+            \App\Http\Middleware\SentryContext::class,
+            \App\Http\Middleware\GrafanaPerformanceMiddleware::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
@@ -67,5 +70,8 @@ class Kernel extends HttpKernel
         'isOwnerOnPro' => \App\Http\Middleware\EnsureOwnerIsOnPROPlan::class,
         'verifiedSetup' => \App\Http\Middleware\EnsureSetupIsDone::class,
         'impersonate' => \App\Http\Middleware\Impersonate::class,
+        'feature' => \App\Http\Middleware\FeatureFlagMiddleware::class,
+        'maintenance.flag' => \App\Http\Middleware\MaintenanceModeMiddleware::class,
+        'grafana.performance' => \App\Http\Middleware\GrafanaPerformanceMiddleware::class,
     ];
 }
