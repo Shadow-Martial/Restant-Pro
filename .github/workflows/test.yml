@@ -39,7 +39,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: Get Composer Cache Directory
         id: composer-cache
@@ -52,23 +51,109 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
+      - name: Cache NPM dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-interaction
+        run: |
+          composer install --prefer-dist --no-interaction --verbose
+          composer dump-autoload
 
       - name: Install NPM dependencies
-        run: npm ci
+        run: |
+          npm install
+          npm list --depth=0 || true
+
+      - name: Validate Environment
+        run: |
+          echo "PHP Version: $(php --version)"
+          echo "Composer Version: $(composer --version)"
+          echo "Node Version: $(node --version)"
+          echo "NPM Version: $(npm --version)"
+          
+          # Check if required files exist
+          echo "Checking required files..."
+          ls -la
+          
+          if [ ! -f "composer.json" ]; then
+            echo "ERROR: composer.json not found"
+            exit 1
+          fi
+          
+          if [ ! -f "package.json" ]; then
+            echo "ERROR: package.json not found"
+            exit 1
+          fi
 
       - name: Prepare Laravel Application
         run: |
-          cp .env.testing .env
-          php artisan key:generate
+          # Create .env file from .env.testing if it exists, otherwise from .env.example
+          if [ -f .env.testing ]; then
+            echo "Using .env.testing file"
+            cp .env.testing .env
+          elif [ -f .env.example ]; then
+            echo "Using .env.example file"
+            cp .env.example .env
+            # Set testing environment variables
+            sed -i 's/APP_ENV=.*/APP_ENV=testing/' .env
+            sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=mysql/' .env
+            sed -i 's/DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+            sed -i 's/DB_PORT=.*/DB_PORT=3306/' .env
+            sed -i 's/DB_DATABASE=.*/DB_DATABASE=testing/' .env
+            sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
+            sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=password/' .env
+          else
+            echo "ERROR: Neither .env.testing nor .env.example found"
+            exit 1
+          fi
+          
+          # Generate application key
+          php artisan key:generate --force
+          
+          # Clear and cache configuration
+          php artisan config:clear
           php artisan config:cache
+          
+          # Wait for MySQL to be ready and test connection
+          echo "Testing database connection..."
+          for i in {1..30}; do
+            if mysqladmin ping -h127.0.0.1 -P3306 -uroot -ppassword --silent; then
+              echo "MySQL is ready"
+              break
+            fi
+            echo "Waiting for MySQL to be ready... ($i/30)"
+            sleep 2
+          done
+          
+          # Test Laravel database connection
+          php artisan migrate:status || echo "Migration status check failed, but continuing..."
+          
+          # Run migrations if they exist
+          if [ -d "database/migrations" ] && [ "$(ls -A database/migrations)" ]; then
+            echo "Running migrations..."
+            php artisan migrate --force
+          else
+            echo "No migrations found, skipping migration step"
+          fi
 
       - name: Run PHP tests
-        run: vendor/bin/phpunit --coverage-clover coverage.xml
+        run: |
+          # Check if phpunit.xml exists, if not use default Laravel testing
+          if [ -f phpunit.xml ]; then
+            echo "Running PHPUnit with phpunit.xml configuration"
+            vendor/bin/phpunit --coverage-clover coverage.xml --verbose
+          else
+            echo "Running Laravel Artisan test command"
+            php artisan test --coverage --coverage-clover coverage.xml
+          fi
 
       - name: Build assets
-        run: npm run build
+        run: npm run production
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
