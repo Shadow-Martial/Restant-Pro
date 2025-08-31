@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Events\DeploymentStarted;
+use App\Events\DeploymentCompleted;
+use App\Events\DeploymentRollback;
+use App\Listeners\SendDeploymentNotifications;
 use App\Listeners\SetRestaurantIdInSession;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Registered;
@@ -23,7 +27,15 @@ class EventServiceProvider extends ServiceProvider
         Login::class => [
             SetRestaurantIdInSession::class,
         ],
-
+        DeploymentStarted::class => [
+            SendDeploymentNotifications::class . '@handleDeploymentStarted',
+        ],
+        DeploymentCompleted::class => [
+            SendDeploymentNotifications::class . '@handleDeploymentCompleted',
+        ],
+        DeploymentRollback::class => [
+            SendDeploymentNotifications::class . '@handleDeploymentRollback',
+        ],
     ];
 
     /**
