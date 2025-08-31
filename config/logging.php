@@ -54,7 +54,7 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['daily'],
+            'channels' => ['daily', 'grafana'],
             'ignore_exceptions' => false,
         ],
 
@@ -70,6 +70,14 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
+            'replace_placeholders' => true,
+        ],
+
+        'deployment' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/deployment.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 30,
             'replace_placeholders' => true,
         ],
 
@@ -125,6 +133,12 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+
+        'grafana' => [
+            'driver' => 'custom',
+            'via' => \App\Logging\CreateGrafanaCloudLogger::class,
+            'level' => env('LOG_LEVEL', 'debug'),
         ],
     ],
 

@@ -36,6 +36,8 @@
         "mckenziearts/laravel-notify": "^2.4",
         "mollie/laravel-mollie": "^2.22",
         "pusher/pusher-php-server": "^7.0",
+        "sentry/sentry-laravel": "^4.0",
+        "flagsmith/flagsmith-php-client": "^3.0",
         "silviolleite/laravelpwa": "^2.0",
         "spatie/eloquent-sortable": "^4.0",
         "spatie/geocoder": "^3.14",
@@ -79,7 +81,10 @@
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
             "Modules\\": "modules/"
-        }
+        },
+        "files": [
+            "app/Helpers/FlagsmithHelpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

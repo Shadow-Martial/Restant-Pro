@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API;
 use App\Http\Controllers\DriverController;
+use App\Http\Controllers\HealthCheckController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -11,6 +12,10 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 |
 */
+
+// Health check endpoints (no authentication required)
+Route::get('/health', [HealthCheckController::class, 'simple'])->name('health.simple');
+Route::get('/health/detailed', [HealthCheckController::class, 'check'])->name('health.detailed');
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();

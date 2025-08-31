@@ -215,10 +215,17 @@ return [
          */
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
+        App\Providers\DeploymentServiceProvider::class,
+        App\Providers\EnvironmentServiceProvider::class,
         App\Providers\TranslationServiceProvider::class,
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\DeploymentServiceProvider::class,
+        App\Providers\SentryServiceProvider::class,
+        App\Providers\FlagsmithServiceProvider::class,
+        App\Providers\GrafanaCloudServiceProvider::class,
+        App\Providers\BladeServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
         Spatie\Geocoder\GeocoderServiceProvider::class,
         Spatie\CookieConsent\CookieConsentServiceProvider::class,
@@ -240,12 +247,18 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         'Cart' => Darryldecode\Cart\Facades\CartFacade::class,
+        'Deployment' => App\Facades\Deployment::class,
+        'EnvironmentManager' => App\Facades\EnvironmentManager::class,
+        'Flagsmith' => App\Facades\Flagsmith::class,
+        'GrafanaCloud' => App\Facades\GrafanaCloud::class,
+        'SecretManager' => App\Facades\SecretManager::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
         'Geocoder' => Spatie\Geocoder\Facades\Geocoder::class,
         'Image' => Intervention\Image\ImageManagerStatic::class,
         'Paystack' => Unicodeveloper\Paystack\Facades\Paystack::class,
         'Pusher' => Pusher\Pusher::class,
         'ReCaptcha' => Biscolab\ReCaptcha\Facades\ReCaptcha::class,
+        'Sentry' => App\Facades\Sentry::class,
         'Redis' => Illuminate\Support\Facades\Redis::class
     ])->toArray(),
 
