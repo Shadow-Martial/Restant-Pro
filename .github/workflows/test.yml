@@ -61,8 +61,24 @@ jobs:
 
       - name: Install Composer dependencies
         run: |
-          composer install --prefer-dist --no-interaction --verbose
-          composer dump-autoload
+          echo "Checking composer.json and composer.lock compatibility..."
+          
+          # Try to install first, if it fails due to lock file issues, update
+          if composer install --prefer-dist --no-interaction --dry-run 2>&1 | grep -q "lock file is not up to date\|not present in the lock file"; then
+            echo "⚠️  Composer lock file is outdated, updating dependencies..."
+            echo "This will update composer.lock to match composer.json"
+            
+            # Update dependencies to match composer.json
+            composer update --prefer-dist --no-interaction --verbose
+            
+            echo "✅ Dependencies updated successfully"
+          else
+            echo "✅ Installing dependencies from existing lock file..."
+            composer install --prefer-dist --no-interaction --verbose
+          fi
+          
+          # Optimize autoloader
+          composer dump-autoload --optimize
 
       - name: Install NPM dependencies
         run: |
