@@ -1,14 +1,9 @@
 {
-    "name": "laravel/laravel",
+    "name": "restant/restant-pro",
     "type": "project",
-    "description": "The Laravel Framework.",
-    "keywords": [
-        "framework",
-        "laravel"
-    ],
+    "description": "Restant - Multi-Tenant SaaS Platform with Automated Deployment",
+    "keywords": ["framework", "laravel", "saas", "multi-tenant", "restaurant"],
     "license": "MIT",
-    "repositories": {
-    },
     "require": {
         "php": "^8.1",
         "akaunting/laravel-module": "^2.0",
@@ -20,6 +15,7 @@
         "darryldecode/cart": "^4.2",
         "dnsimmons/openweather": "^1.0",
         "doctrine/dbal": "^3.5",
+        "flagsmith/flagsmith-php-client": "^2.0",
         "guzzlehttp/guzzle": "^7.2",
         "intervention/image": "^2.5",
         "joedixon/laravel-translation": "^2.2",
@@ -37,7 +33,6 @@
         "mollie/laravel-mollie": "^2.22",
         "pusher/pusher-php-server": "^7.0",
         "sentry/sentry-laravel": "^4.0",
-        "flagsmith/flagsmith-php-client": "^3.0",
         "silviolleite/laravelpwa": "^2.0",
         "spatie/eloquent-sortable": "^4.0",
         "spatie/geocoder": "^3.14",
@@ -57,23 +52,11 @@
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
         "laravel/pint": "^1.0",
-        "laravel/sail": "*",
+        "laravel/sail": "^1.18",
         "mockery/mockery": "^1.4.4",
-        "nunomaduro/collision": "^6.1",
-        "phpunit/phpunit": "^9.5.10"
-    },
-    "config": {
-        "optimize-autoloader": true,
-        "preferred-install": "dist",
-        "sort-packages": true,
-        "allow-plugins": {
-            "phpstan/extension-installer": true
-        }
-    },
-    "extra": {
-        "laravel": {
-            "dont-discover": []
-        }
+        "nunomaduro/collision": "^7.0",
+        "phpunit/phpunit": "^10.1",
+        "spatie/laravel-ignition": "^2.0"
     },
     "autoload": {
         "psr-4": {
@@ -83,7 +66,7 @@
             "Modules\\": "modules/"
         },
         "files": [
-            "app/Helpers/FlagsmithHelpers.php"
+            "app/Helpers/helpers.php"
         ]
     },
     "autoload-dev": {
@@ -91,12 +74,13 @@
             "Tests\\": "tests/"
         }
     },
-    "minimum-stability": "stable",
-    "prefer-stable": true,
     "scripts": {
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
@@ -104,5 +88,21 @@
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
         ]
-    }
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }
